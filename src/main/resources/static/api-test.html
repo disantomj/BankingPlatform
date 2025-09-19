@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Platform API Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { margin: 0; font-size: 2.5em; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+
+        .content { padding: 30px; }
+        .section {
+            margin: 30px 0;
+            padding: 25px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .form-group { margin: 15px 0; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        .btn.secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+        .btn.success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .result.success {
+            background: #d5f4e6;
+            border: 1px solid #27ae60;
+            color: #1e8449;
+        }
+        .result.error {
+            background: #fadbd8;
+            border: 1px solid #e74c3c;
+            color: #c0392b;
+        }
+        .result.info {
+            background: #d6eaf8;
+            border: 1px solid #3498db;
+            color: #2471a3;
+        }
+
+        .token-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .availability {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .available { background: #d5f4e6; color: #27ae60; }
+        .unavailable { background: #fadbd8; color: #e74c3c; }
+
+        .endpoint-ref {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .endpoint-ref code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏦 Banking Platform API</h1>
+        <p>Test your authentication endpoints directly</p>
+    </div>
+
+    <div class="content">
+        <!-- Health Check -->
+        <div class="section">
+            <h2>🔍 Service Health</h2>
+            <button class="btn success" onclick="checkHealth()">Check Health Status</button>
+            <div id="healthResult"></div>
+        </div>
+
+        <!-- Availability Checks -->
+        <div class="section">
+            <h2>📋 Availability Checker</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Username Availability:</label>
+                    <input type="text" id="checkUsername" placeholder="Enter username">
+                    <button class="btn secondary" onclick="checkUsernameAvailability()">Check</button>
+                    <div id="usernameAvailability"></div>
+                </div>
+                <div class="form-group">
+                    <label>Email Availability:</label>
+                    <input type="email" id="checkEmail" placeholder="Enter email">
+                    <button class="btn secondary" onclick="checkEmailAvailability()">Check</button>
+                    <div id="emailAvailability"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Registration -->
+        <div class="section">
+            <h2>📝 User Registration</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="signupUsername" placeholder="3-50 characters" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="signupEmail" placeholder="Valid email address" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="signupPassword" placeholder="Minimum 6 characters" required>
+                </div>
+                <div class="form-group">
+                    <label>Role:</label>
+                    <select id="signupRole">
+                        <option value="CUSTOMER">CUSTOMER</option>
+                        <option value="USER">USER</option>
+                        <option value="ADMIN">ADMIN</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn" onclick="signup()">Register User</button>
+            <div id="signupResult"></div>
+        </div>
+
+        <!-- User Login -->
+        <div class="section">
+            <h2>🔐 User Login</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="loginUsername" placeholder="Your username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="loginPassword" placeholder="Your password" required>
+                </div>
+            </div>
+            <button class="btn" onclick="login()">Login</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <!-- User Profile -->
+        <div class="section">
+            <h2>👤 User Profile</h2>
+            <div class="form-group">
+                <label>JWT Token:</label>
+                <input type="text" id="profileToken" placeholder="Paste your JWT token here">
+            </div>
+            <button class="btn" onclick="getProfile()">Get Profile</button>
+            <div id="profileResult"></div>
+        </div>
+
+        <!-- API Reference -->
+        <div class="section">
+            <h2>🔗 API Endpoints</h2>
+            <div class="endpoint-ref">
+                <strong>Base URL:</strong> <code>http://localhost:8080</code><br><br>
+                <strong>Endpoints:</strong><br>
+                • <code>POST /api/users/signup</code> - User registration<br>
+                • <code>POST /api/users/login</code> - User authentication<br>
+                • <code>GET /api/users/profile</code> - Get user profile (requires token)<br>
+                • <code>GET /api/users/check-username?username=test</code> - Check username<br>
+                • <code>GET /api/users/check-email?email=test@test.com</code> - Check email<br>
+                • <code>GET /api/users/health</code> - Service health check
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = 'http://localhost:8080/api/users';
+    let currentToken = '';
+
+    // Health Check
+    async function checkHealth() {
+        try {
+            const response = await fetch(`${BASE_URL}/health`);
+            const data = await response.json();
+            document.getElementById('healthResult').innerHTML =
+                `<div class="result success">✅ Service Status: ${data.status}</div>`;
+        } catch (error) {
+            document.getElementById('healthResult').innerHTML =
+                `<div class="result error">❌ Health check failed: ${error.message}</div>`;
+        }
+    }
+
+    // Check Username Availability
+    async function checkUsernameAvailability() {
+        const username = document.getElementById('checkUsername').value;
+        if (!username) return;
+
+        try {
+            const response = await fetch(`${BASE_URL}/check-username?username=${encodeURIComponent(username)}`);
+            const data = await response.json();
+            const resultDiv = document.getElementById('usernameAvailability');
+
+            if (data.available) {
+                resultDiv.innerHTML = '<span class="availability available">✅ Available</span>';
+            } else {
+                resultDiv.innerHTML = '<span class="availability unavailable">❌ Taken</span>';
+            }
+        } catch (error) {
+            document.getElementById('usernameAvailability').innerHTML =
+                '<span class="availability unavailable">❌ Error checking</span>';
+        }
+    }
+
+    // Check Email Availability
+    async function checkEmailAvailability() {
+        const email = document.getElementById('checkEmail').value;
+        if (!email) return;
+
+        try {
+            const response = await fetch(`${BASE_URL}/check-email?email=${encodeURIComponent(email)}`);
+            const data = await response.json();
+            const resultDiv = document.getElementById('emailAvailability');
+
+            if (data.available) {
+                resultDiv.innerHTML = '<span class="availability available">✅ Available</span>';
+            } else {
+                resultDiv.innerHTML = '<span class="availability unavailable">❌ Taken</span>';
+            }
+        } catch (error) {
+            document.getElementById('emailAvailability').innerHTML =
+                '<span class="availability unavailable">❌ Error checking</span>';
+        }
+    }
+
+    // User Signup
+    async function signup() {
+        const userData = {
+            username: document.getElementById('signupUsername').value,
+            email: document.getElementById('signupEmail').value,
+            password: document.getElementById('signupPassword').value,
+            role: document.getElementById('signupRole').value
+        };
+
+        try {
+            const response = await fetch(`${BASE_URL}/signup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const data = await response.json();
+            const resultDiv = document.getElementById('signupResult');
+
+            if (response.ok) {
+                currentToken = data.token;
+                document.getElementById('profileToken').value = currentToken;
+                resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ Registration successful!<br>
+                            <strong>User:</strong> ${data.username}<br>
+                            <strong>Role:</strong> ${data.role}
+                        </div>
+                        <div class="token-display">
+                            <button class="copy-btn" onclick="copyToken('${data.token}')">Copy</button>
+                            <strong>JWT Token:</strong><br>${data.token}
+                        </div>
+                    `;
+            } else {
+                resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Registration failed: ${data.message || data.error}
+                        </div>
+                    `;
+            }
+        } catch (error) {
+            document.getElementById('signupResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // User Login
+    async function login() {
+        const loginData = {
+            username: document.getElementById('loginUsername').value,
+            password: document.getElementById('loginPassword').value
+        };
+
+        try {
+            const response = await fetch(`${BASE_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData)
+            });
+
+            const data = await response.json();
+            const resultDiv = document.getElementById('loginResult');
+
+            if (response.ok) {
+                currentToken = data.token;
+                document.getElementById('profileToken').value = currentToken;
+                resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ Login successful!<br>
+                            <strong>User:</strong> ${data.username}<br>
+                            <strong>Role:</strong> ${data.role}
+                        </div>
+                        <div class="token-display">
+                            <button class="copy-btn" onclick="copyToken('${data.token}')">Copy</button>
+                            <strong>JWT Token:</strong><br>${data.token}
+                        </div>
+                    `;
+            } else {
+                resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Login failed: ${data.message || data.error}
+                        </div>
+                    `;
+            }
+        } catch (error) {
+            document.getElementById('loginResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User Profile
+    async function getProfile() {
+        const token = document.getElementById('profileToken').value;
+        if (!token) {
+            document.getElementById('profileResult').innerHTML =
+                '<div class="result error">❌ Please provide a JWT token</div>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${BASE_URL}/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json();
+            const resultDiv = document.getElementById('profileResult');
+
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ Profile retrieved successfully!<br>
+                            <strong>ID:</strong> ${data.id}<br>
+                            <strong>Username:</strong> ${data.username}<br>
+                            <strong>Email:</strong> ${data.email}<br>
+                            <strong>Role:</strong> ${data.role}<br>
+                            <strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}<br>
+                            <strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}
+                        </div>
+                    `;
+            } else {
+                resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Profile fetch failed: ${data.message || data.error}
+                        </div>
+                    `;
+            }
+        } catch (error) {
+            document.getElementById('profileResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Copy token to clipboard
+    function copyToken(token) {
+        navigator.clipboard.writeText(token).then(() => {
+            alert('Token copied to clipboard!');
+        });
+    }
+
+    // Auto-check health on page load
+    window.addEventListener('load', checkHealth);
+</script>
+</body>
+</html>

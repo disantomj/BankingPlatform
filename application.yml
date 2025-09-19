@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bankingdb
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:tanner02}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+jwt:
+  secret: ${JWT_SECRET:bankingplatform-secret-key-for-jwt-tokens-minimum-256-bits}
+  expiration: ${JWT_EXPIRATION:864000000}
