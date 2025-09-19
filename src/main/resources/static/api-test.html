@@ -253,18 +253,310 @@
             <div id="profileResult"></div>
         </div>
 
+        <!-- Account Management -->
+        <div class="section">
+            <h2>🏦 Account Management</h2>
+
+            <!-- Create Account -->
+            <h3>Create New Account</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="createUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Account Type:</label>
+                    <select id="createAccountType">
+                        <option value="CHECKING">CHECKING</option>
+                        <option value="SAVINGS">SAVINGS</option>
+                        <option value="BUSINESS">BUSINESS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Account Name:</label>
+                    <input type="text" id="createAccountName" placeholder="e.g., John's Checking" required>
+                </div>
+                <div class="form-group">
+                    <label>Initial Balance:</label>
+                    <input type="number" id="createInitialBalance" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Currency:</label>
+                    <input type="text" id="createCurrency" placeholder="USD" maxlength="3" value="USD" required>
+                </div>
+            </div>
+            <button class="btn" onclick="createAccount()">Create Account</button>
+            <div id="createAccountResult"></div>
+        </div>
+
+        <!-- Account Lookup -->
+        <div class="section">
+            <h2>🔍 Account Lookup</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Get Account by ID:</label>
+                    <input type="number" id="getAccountId" placeholder="Account ID">
+                    <button class="btn secondary" onclick="getAccountById()">Get Account</button>
+                    <div id="getAccountByIdResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Account by Number:</label>
+                    <input type="text" id="getAccountNum" placeholder="Account Number">
+                    <button class="btn secondary" onclick="getAccountByNumber()">Get Account</button>
+                    <div id="getAccountByNumberResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get User's Accounts:</label>
+                    <input type="number" id="getUserAccountsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUserAccounts()">Get Accounts</button>
+                    <div id="getUserAccountsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Active Accounts:</label>
+                    <input type="number" id="getActiveAccountsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getActiveAccounts()">Get Active</button>
+                    <div id="getActiveAccountsResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Updates -->
+        <div class="section">
+            <h2>✏️ Account Updates</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Update Account Status:</label>
+                    <input type="number" id="updateStatusId" placeholder="Account ID">
+                    <select id="updateStatusValue">
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="INACTIVE">INACTIVE</option>
+                        <option value="FROZEN">FROZEN</option>
+                        <option value="CLOSED">CLOSED</option>
+                        <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+                        <option value="SUSPENDED">SUSPENDED</option>
+                    </select>
+                    <button class="btn" onclick="updateAccountStatus()">Update Status</button>
+                    <div id="updateStatusResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Update Account Balance:</label>
+                    <input type="number" id="updateBalanceId" placeholder="Account ID">
+                    <input type="number" id="updateBalanceValue" placeholder="New Balance" step="0.01">
+                    <button class="btn" onclick="updateAccountBalance()">Update Balance</button>
+                    <div id="updateBalanceResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Deletion -->
+        <div class="section">
+            <h2>🗑️ Account Deletion</h2>
+            <div class="form-group">
+                <label>Delete Account (requires zero balance):</label>
+                <input type="number" id="deleteAccountId" placeholder="Account ID">
+                <button class="btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="deleteAccount()">Delete Account</button>
+                <div id="deleteAccountResult"></div>
+            </div>
+        </div>
+
+        <!-- Transaction Management -->
+        <div class="section">
+            <h2>💸 Transaction Management</h2>
+
+            <!-- Create Deposit -->
+            <h3>Create Deposit</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>To Account ID:</label>
+                    <input type="number" id="depositToAccountId" placeholder="Account ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="depositAmount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="depositUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Channel:</label>
+                    <select id="depositChannel">
+                        <option value="ONLINE_BANKING">ONLINE_BANKING</option>
+                        <option value="MOBILE_APP">MOBILE_APP</option>
+                        <option value="ATM">ATM</option>
+                        <option value="BRANCH">BRANCH</option>
+                        <option value="API">API</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="depositDescription" placeholder="Optional description">
+                </div>
+            </div>
+            <button class="btn success" onclick="createDeposit()">Create Deposit</button>
+            <div id="depositResult"></div>
+
+            <!-- Create Withdrawal -->
+            <h3>Create Withdrawal</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>From Account ID:</label>
+                    <input type="number" id="withdrawalFromAccountId" placeholder="Account ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="withdrawalAmount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="withdrawalUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Channel:</label>
+                    <select id="withdrawalChannel">
+                        <option value="ONLINE_BANKING">ONLINE_BANKING</option>
+                        <option value="MOBILE_APP">MOBILE_APP</option>
+                        <option value="ATM">ATM</option>
+                        <option value="BRANCH">BRANCH</option>
+                        <option value="API">API</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="withdrawalDescription" placeholder="Optional description">
+                </div>
+            </div>
+            <button class="btn" onclick="createWithdrawal()">Create Withdrawal</button>
+            <div id="withdrawalResult"></div>
+
+            <!-- Create Transfer -->
+            <h3>Create Transfer</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>From Account ID:</label>
+                    <input type="number" id="transferFromAccountId" placeholder="Source Account ID" required>
+                </div>
+                <div class="form-group">
+                    <label>To Account ID:</label>
+                    <input type="number" id="transferToAccountId" placeholder="Destination Account ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="transferAmount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="transferUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Channel:</label>
+                    <select id="transferChannel">
+                        <option value="ONLINE_BANKING">ONLINE_BANKING</option>
+                        <option value="MOBILE_APP">MOBILE_APP</option>
+                        <option value="ATM">ATM</option>
+                        <option value="BRANCH">BRANCH</option>
+                        <option value="API">API</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="transferDescription" placeholder="Optional description">
+                </div>
+            </div>
+            <button class="btn" onclick="createTransfer()">Create Transfer</button>
+            <div id="transferResult"></div>
+        </div>
+
+        <!-- Transaction Processing -->
+        <div class="section">
+            <h2>⚙️ Transaction Processing</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Process Transaction:</label>
+                    <input type="number" id="processTransactionId" placeholder="Transaction ID">
+                    <button class="btn success" onclick="processTransaction()">Process Transaction</button>
+                    <div id="processTransactionResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Cancel Transaction:</label>
+                    <input type="number" id="cancelTransactionId" placeholder="Transaction ID">
+                    <button class="btn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);" onclick="cancelTransaction()">Cancel Transaction</button>
+                    <div id="cancelTransactionResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Lookup -->
+        <div class="section">
+            <h2>🔍 Transaction Lookup</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Get Transaction by ID:</label>
+                    <input type="number" id="getTransactionId" placeholder="Transaction ID">
+                    <button class="btn secondary" onclick="getTransactionById()">Get Transaction</button>
+                    <div id="getTransactionByIdResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Transaction by Reference:</label>
+                    <input type="text" id="getTransactionRef" placeholder="Transaction Reference">
+                    <button class="btn secondary" onclick="getTransactionByReference()">Get Transaction</button>
+                    <div id="getTransactionByRefResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Account Transactions:</label>
+                    <input type="number" id="getAccountTransactionsId" placeholder="Account ID">
+                    <button class="btn secondary" onclick="getAccountTransactions()">Get Transactions</button>
+                    <div id="getAccountTransactionsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get User Transactions:</label>
+                    <input type="number" id="getUserTransactionsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUserTransactions()">Get Transactions</button>
+                    <div id="getUserTransactionsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Recent User Transactions:</label>
+                    <input type="number" id="getRecentTransactionsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getRecentUserTransactions()">Get Recent</button>
+                    <div id="getRecentTransactionsResult"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- API Reference -->
         <div class="section">
             <h2>🔗 API Endpoints</h2>
             <div class="endpoint-ref">
                 <strong>Base URL:</strong> <code>http://localhost:8080</code><br><br>
-                <strong>Endpoints:</strong><br>
+                <strong>User Endpoints:</strong><br>
                 • <code>POST /api/users/signup</code> - User registration<br>
                 • <code>POST /api/users/login</code> - User authentication<br>
                 • <code>GET /api/users/profile</code> - Get user profile (requires token)<br>
                 • <code>GET /api/users/check-username?username=test</code> - Check username<br>
                 • <code>GET /api/users/check-email?email=test@test.com</code> - Check email<br>
-                • <code>GET /api/users/health</code> - Service health check
+                • <code>GET /api/users/health</code> - Service health check<br><br>
+
+                <strong>Account Endpoints:</strong><br>
+                • <code>POST /api/accounts</code> - Create new account<br>
+                • <code>GET /api/accounts/{id}</code> - Get account by ID<br>
+                • <code>GET /api/accounts/number/{accountNum}</code> - Get account by number<br>
+                • <code>GET /api/accounts/user/{userId}</code> - Get user's accounts<br>
+                • <code>GET /api/accounts/user/{userId}/active</code> - Get user's active accounts<br>
+                • <code>PUT /api/accounts/{id}/status</code> - Update account status<br>
+                • <code>PUT /api/accounts/{id}/balance</code> - Update account balance<br>
+                • <code>DELETE /api/accounts/{id}</code> - Delete account<br><br>
+
+                <strong>Transaction Endpoints:</strong><br>
+                • <code>POST /api/transactions/deposit</code> - Create deposit<br>
+                • <code>POST /api/transactions/withdrawal</code> - Create withdrawal<br>
+                • <code>POST /api/transactions/transfer</code> - Create transfer<br>
+                • <code>PUT /api/transactions/{id}/process</code> - Process transaction<br>
+                • <code>PUT /api/transactions/{id}/cancel</code> - Cancel transaction<br>
+                • <code>GET /api/transactions/{id}</code> - Get transaction by ID<br>
+                • <code>GET /api/transactions/reference/{ref}</code> - Get by reference<br>
+                • <code>GET /api/transactions/account/{accountId}</code> - Get account transactions<br>
+                • <code>GET /api/transactions/user/{userId}</code> - Get user transactions<br>
+                • <code>GET /api/transactions/user/{userId}/recent</code> - Get recent transactions
             </div>
         </div>
     </div>
@@ -272,6 +564,8 @@
 
 <script>
     const BASE_URL = 'http://localhost:8080/api/users';
+    const ACCOUNT_BASE_URL = 'http://localhost:8080/api/accounts';
+    const TRANSACTION_BASE_URL = 'http://localhost:8080/api/transactions';
     let currentToken = '';
 
     // Health Check
@@ -474,6 +768,680 @@
         navigator.clipboard.writeText(token).then(() => {
             alert('Token copied to clipboard!');
         });
+    }
+
+    // Account Functions
+
+    // Helper function to get authenticated headers
+    function getAuthHeaders() {
+        const token = document.getElementById('profileToken').value || currentToken;
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return headers;
+    }
+
+    // Create Account
+    async function createAccount() {
+        const accountData = {
+            userId: parseInt(document.getElementById('createUserId').value),
+            accountType: document.getElementById('createAccountType').value,
+            accountName: document.getElementById('createAccountName').value,
+            initialBalance: parseFloat(document.getElementById('createInitialBalance').value),
+            currency: document.getElementById('createCurrency').value
+        };
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(accountData)
+            });
+
+            const resultDiv = document.getElementById('createAccountResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Account created successfully!<br>
+                        <strong>Account ID:</strong> ${data.id}<br>
+                        <strong>Account Number:</strong> ${data.accountNum}<br>
+                        <strong>Type:</strong> ${data.accountType}<br>
+                        <strong>Balance:</strong> ${data.currency} ${data.balance}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Account creation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('createAccountResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Account by ID
+    async function getAccountById() {
+        const accountId = document.getElementById('getAccountId').value;
+        if (!accountId) return;
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/${accountId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getAccountByIdResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Account found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Number:</strong> ${data.accountNum}<br>
+                        <strong>Name:</strong> ${data.accountName}<br>
+                        <strong>Type:</strong> ${data.accountType}<br>
+                        <strong>Balance:</strong> ${data.currency} ${data.balance}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>User ID:</strong> ${data.user.id}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Account not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getAccountByIdResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Account by Number
+    async function getAccountByNumber() {
+        const accountNum = document.getElementById('getAccountNum').value;
+        if (!accountNum) return;
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/number/${encodeURIComponent(accountNum)}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getAccountByNumberResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Account found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Number:</strong> ${data.accountNum}<br>
+                        <strong>Name:</strong> ${data.accountName}<br>
+                        <strong>Type:</strong> ${data.accountType}<br>
+                        <strong>Balance:</strong> ${data.currency} ${data.balance}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Account not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getAccountByNumberResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User's Accounts
+    async function getUserAccounts() {
+        const userId = document.getElementById('getUserAccountsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/user/${userId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getUserAccountsResult');
+
+            if (response.ok) {
+                const accounts = await response.json();
+                if (accounts.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No accounts found for user ${userId}</div>`;
+                } else {
+                    let accountsHtml = `<div class="result success">✅ Found ${accounts.length} account(s):<br>`;
+                    accounts.forEach(acc => {
+                        accountsHtml += `<strong>${acc.accountName}</strong> (${acc.accountNum}) - ${acc.currency} ${acc.balance} [${acc.status}]<br>`;
+                    });
+                    accountsHtml += '</div>';
+                    resultDiv.innerHTML = accountsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching accounts</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUserAccountsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Active Accounts
+    async function getActiveAccounts() {
+        const userId = document.getElementById('getActiveAccountsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/user/${userId}/active`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getActiveAccountsResult');
+
+            if (response.ok) {
+                const accounts = await response.json();
+                if (accounts.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No active accounts found for user ${userId}</div>`;
+                } else {
+                    let accountsHtml = `<div class="result success">✅ Found ${accounts.length} active account(s):<br>`;
+                    accounts.forEach(acc => {
+                        accountsHtml += `<strong>${acc.accountName}</strong> (${acc.accountNum}) - ${acc.currency} ${acc.balance}<br>`;
+                    });
+                    accountsHtml += '</div>';
+                    resultDiv.innerHTML = accountsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching active accounts</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getActiveAccountsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Update Account Status
+    async function updateAccountStatus() {
+        const accountId = document.getElementById('updateStatusId').value;
+        const newStatus = document.getElementById('updateStatusValue').value;
+        if (!accountId || !newStatus) return;
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/${accountId}/status`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            const resultDiv = document.getElementById('updateStatusResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Status updated successfully!<br>
+                        <strong>Account:</strong> ${data.accountNum}<br>
+                        <strong>New Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Status update failed</div>`;
+            }
+        } catch (error) {
+            document.getElementById('updateStatusResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Update Account Balance
+    async function updateAccountBalance() {
+        const accountId = document.getElementById('updateBalanceId').value;
+        const newBalance = document.getElementById('updateBalanceValue').value;
+        if (!accountId || !newBalance) return;
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/${accountId}/balance`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ newBalance: parseFloat(newBalance) })
+            });
+
+            const resultDiv = document.getElementById('updateBalanceResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Balance updated successfully!<br>
+                        <strong>Account:</strong> ${data.accountNum}<br>
+                        <strong>New Balance:</strong> ${data.currency} ${data.balance}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Balance update failed (negative balance not allowed)</div>`;
+            }
+        } catch (error) {
+            document.getElementById('updateBalanceResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Delete Account
+    async function deleteAccount() {
+        const accountId = document.getElementById('deleteAccountId').value;
+        if (!accountId) return;
+
+        if (!confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${ACCOUNT_BASE_URL}/${accountId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('deleteAccountResult');
+
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Account deleted successfully!
+                    </div>
+                `;
+            } else if (response.status === 400) {
+                resultDiv.innerHTML = `<div class="result error">❌ Cannot delete account with non-zero balance</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Account not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('deleteAccountResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Transaction Functions
+
+    // Create Deposit
+    async function createDeposit() {
+        const depositData = {
+            toAccountId: parseInt(document.getElementById('depositToAccountId').value),
+            amount: parseFloat(document.getElementById('depositAmount').value),
+            userId: parseInt(document.getElementById('depositUserId').value),
+            channel: document.getElementById('depositChannel').value,
+            description: document.getElementById('depositDescription').value
+        };
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/deposit`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(depositData)
+            });
+
+            const resultDiv = document.getElementById('depositResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Deposit created successfully!<br>
+                        <strong>Transaction ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.transactionReference}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Deposit creation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('depositResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Create Withdrawal
+    async function createWithdrawal() {
+        const withdrawalData = {
+            fromAccountId: parseInt(document.getElementById('withdrawalFromAccountId').value),
+            amount: parseFloat(document.getElementById('withdrawalAmount').value),
+            userId: parseInt(document.getElementById('withdrawalUserId').value),
+            channel: document.getElementById('withdrawalChannel').value,
+            description: document.getElementById('withdrawalDescription').value
+        };
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/withdrawal`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(withdrawalData)
+            });
+
+            const resultDiv = document.getElementById('withdrawalResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Withdrawal created successfully!<br>
+                        <strong>Transaction ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.transactionReference}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Withdrawal creation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('withdrawalResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Create Transfer
+    async function createTransfer() {
+        const transferData = {
+            fromAccountId: parseInt(document.getElementById('transferFromAccountId').value),
+            toAccountId: parseInt(document.getElementById('transferToAccountId').value),
+            amount: parseFloat(document.getElementById('transferAmount').value),
+            userId: parseInt(document.getElementById('transferUserId').value),
+            channel: document.getElementById('transferChannel').value,
+            description: document.getElementById('transferDescription').value
+        };
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/transfer`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(transferData)
+            });
+
+            const resultDiv = document.getElementById('transferResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Transfer created successfully!<br>
+                        <strong>Transaction ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.transactionReference}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>From Account:</strong> ${data.fromAccountId}<br>
+                        <strong>To Account:</strong> ${data.toAccountId}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Transfer creation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('transferResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Process Transaction
+    async function processTransaction() {
+        const transactionId = document.getElementById('processTransactionId').value;
+        if (!transactionId) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/${transactionId}/process`, {
+                method: 'PUT',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('processTransactionResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Transaction processed successfully!<br>
+                        <strong>Transaction:</strong> ${data.transactionReference}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Processed At:</strong> ${new Date(data.processedAt).toLocaleString()}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Processing failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('processTransactionResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Cancel Transaction
+    async function cancelTransaction() {
+        const transactionId = document.getElementById('cancelTransactionId').value;
+        if (!transactionId) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/${transactionId}/cancel`, {
+                method: 'PUT',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('cancelTransactionResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Transaction cancelled successfully!<br>
+                        <strong>Transaction:</strong> ${data.transactionReference}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Cancellation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('cancelTransactionResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Transaction by ID
+    async function getTransactionById() {
+        const transactionId = document.getElementById('getTransactionId').value;
+        if (!transactionId) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/${transactionId}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getTransactionByIdResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Transaction found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.transactionReference}<br>
+                        <strong>Type:</strong> ${data.transactionType}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Transaction not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getTransactionByIdResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Transaction by Reference
+    async function getTransactionByReference() {
+        const transactionRef = document.getElementById('getTransactionRef').value;
+        if (!transactionRef) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/reference/${encodeURIComponent(transactionRef)}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getTransactionByRefResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Transaction found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.transactionReference}<br>
+                        <strong>Type:</strong> ${data.transactionType}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Transaction not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getTransactionByRefResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Account Transactions
+    async function getAccountTransactions() {
+        const accountId = document.getElementById('getAccountTransactionsId').value;
+        if (!accountId) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/account/${accountId}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getAccountTransactionsResult');
+
+            if (response.ok) {
+                const transactions = await response.json();
+                if (transactions.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No transactions found for account ${accountId}</div>`;
+                } else {
+                    let transactionsHtml = `<div class="result success">✅ Found ${transactions.length} transaction(s):<br>`;
+                    transactions.slice(0, 5).forEach(txn => {
+                        transactionsHtml += `<strong>${txn.transactionReference}</strong> - ${txn.transactionType} ${txn.currency} ${txn.amount} [${txn.status}]<br>`;
+                    });
+                    if (transactions.length > 5) {
+                        transactionsHtml += `... and ${transactions.length - 5} more<br>`;
+                    }
+                    transactionsHtml += '</div>';
+                    resultDiv.innerHTML = transactionsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching transactions</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getAccountTransactionsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User Transactions
+    async function getUserTransactions() {
+        const userId = document.getElementById('getUserTransactionsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/user/${userId}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getUserTransactionsResult');
+
+            if (response.ok) {
+                const transactions = await response.json();
+                if (transactions.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No transactions found for user ${userId}</div>`;
+                } else {
+                    let transactionsHtml = `<div class="result success">✅ Found ${transactions.length} transaction(s):<br>`;
+                    transactions.slice(0, 5).forEach(txn => {
+                        transactionsHtml += `<strong>${txn.transactionReference}</strong> - ${txn.transactionType} ${txn.currency} ${txn.amount} [${txn.status}]<br>`;
+                    });
+                    if (transactions.length > 5) {
+                        transactionsHtml += `... and ${transactions.length - 5} more<br>`;
+                    }
+                    transactionsHtml += '</div>';
+                    resultDiv.innerHTML = transactionsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching transactions</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUserTransactionsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Recent User Transactions
+    async function getRecentUserTransactions() {
+        const userId = document.getElementById('getRecentTransactionsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${TRANSACTION_BASE_URL}/user/${userId}/recent`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getRecentTransactionsResult');
+
+            if (response.ok) {
+                const transactions = await response.json();
+                if (transactions.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No recent transactions found for user ${userId}</div>`;
+                } else {
+                    let transactionsHtml = `<div class="result success">✅ Found ${transactions.length} recent transaction(s):<br>`;
+                    transactions.forEach(txn => {
+                        transactionsHtml += `<strong>${txn.transactionReference}</strong> - ${txn.transactionType} ${txn.currency} ${txn.amount} [${txn.status}]<br>`;
+                    });
+                    transactionsHtml += '</div>';
+                    resultDiv.innerHTML = transactionsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching recent transactions</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getRecentTransactionsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
     }
 
     // Auto-check health on page load
