@@ -170,6 +170,13 @@ public class TransactionService {
             .collect(Collectors.toList());
     }
 
+    // Find transaction by ID
+    @Transactional(readOnly = true)
+    public Transaction findById(Long transactionId) {
+        return transactionRepository.findById(transactionId)
+            .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + transactionId));
+    }
+
     // Find transaction by reference
     @Transactional(readOnly = true)
     public Optional<Transaction> findByReference(String transactionReference) {

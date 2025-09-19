@@ -99,9 +99,12 @@ public class TransactionController {
     // Get transaction by ID
     @GetMapping("/{id}")
     public ResponseEntity<Transaction> getTransaction(@PathVariable Long id) {
-        return transactionService.findByReference(id.toString())
-            .map(transaction -> ResponseEntity.ok(transaction))
-            .orElse(ResponseEntity.notFound().build());
+        try {
+            Transaction transaction = transactionService.findById(id);
+            return ResponseEntity.ok(transaction);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // Get transaction by reference
