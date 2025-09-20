@@ -523,6 +523,48 @@
             </div>
         </div>
 
+        <!-- Audit Testing -->
+        <div class="section">
+            <h2>📊 Audit Logs & Security Testing</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Recent Audit Logs:</label>
+                    <button class="btn secondary" onclick="getRecentAudits()">Get Recent Audits</button>
+                    <div id="getRecentAuditsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>User Audit History:</label>
+                    <input type="number" id="getUserAuditId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUserAuditHistory()">Get User Audits</button>
+                    <div id="getUserAuditResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Audits by Action Type:</label>
+                    <select id="getAuditsActionType">
+                        <option value="">Select Action</option>
+                        <option value="USER_CREATED">USER_CREATED</option>
+                        <option value="LOGIN">LOGIN</option>
+                        <option value="LOGIN_FAILED">LOGIN_FAILED</option>
+                        <option value="ACCOUNT_CREATED">ACCOUNT_CREATED</option>
+                        <option value="ACCOUNT_STATUS_CHANGED">ACCOUNT_STATUS_CHANGED</option>
+                        <option value="BALANCE_UPDATED">BALANCE_UPDATED</option>
+                        <option value="TRANSACTION_CREATED">TRANSACTION_CREATED</option>
+                        <option value="TRANSACTION_PROCESSED">TRANSACTION_PROCESSED</option>
+                        <option value="TRANSACTION_CANCELLED">TRANSACTION_CANCELLED</option>
+                    </select>
+                    <button class="btn secondary" onclick="getAuditsByAction()">Get Audits</button>
+                    <div id="getAuditsActionResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Security Monitoring:</label>
+                    <button class="btn secondary" onclick="getFailedOperations()">Failed Operations (24h)</button>
+                    <button class="btn secondary" onclick="getHighRiskActivities()">High Risk Activities</button>
+                    <div id="getFailedOperationsResult"></div>
+                    <div id="getHighRiskResult"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- API Reference -->
         <div class="section">
             <h2>🔗 API Endpoints</h2>
@@ -556,7 +598,17 @@
                 • <code>GET /api/transactions/reference/{ref}</code> - Get by reference<br>
                 • <code>GET /api/transactions/account/{accountId}</code> - Get account transactions<br>
                 • <code>GET /api/transactions/user/{userId}</code> - Get user transactions<br>
-                • <code>GET /api/transactions/user/{userId}/recent</code> - Get recent transactions
+                • <code>GET /api/transactions/user/{userId}/recent</code> - Get recent transactions<br><br>
+
+                <strong>Audit Endpoints:</strong><br>
+                • <code>GET /api/audits/recent</code> - Get recent audit logs<br>
+                • <code>GET /api/audits/user/{userId}</code> - Get user audit history<br>
+                • <code>GET /api/audits/action/{action}</code> - Get audits by action type<br>
+                • <code>GET /api/audits/severity/{severity}</code> - Get audits by severity<br>
+                • <code>GET /api/audits/security/failed-operations</code> - Get failed operations<br>
+                • <code>GET /api/audits/security/high-risk</code> - Get high-risk activities<br>
+                • <code>GET /api/audits/security/critical-events</code> - Get critical security events<br>
+                • <code>GET /api/audits/entity/{entityType}/{entityId}</code> - Get entity audit history
             </div>
         </div>
     </div>
@@ -1440,6 +1492,198 @@
             }
         } catch (error) {
             document.getElementById('getRecentTransactionsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // ===== AUDIT TESTING FUNCTIONS =====
+    const AUDIT_BASE_URL = 'http://localhost:8080/api/audits';
+
+    // Get Recent Audits
+    async function getRecentAudits() {
+        try {
+            const response = await fetch(`${AUDIT_BASE_URL}/recent`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getRecentAuditsResult');
+
+            if (response.ok) {
+                const audits = await response.json();
+                if (audits.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No recent audit logs found</div>`;
+                } else {
+                    let auditsHtml = `<div class="result success">✅ Found ${audits.length} recent audit log(s):<br><br>`;
+                    audits.forEach(audit => {
+                        const timestamp = new Date(audit.timestamp).toLocaleString();
+                        auditsHtml += `
+                            <strong>${audit.action}</strong> | ${audit.severity} | ${timestamp}<br>
+                            User: ${audit.username || 'N/A'} | Success: ${audit.success ? '✅' : '❌'}<br>
+                            ${audit.description}<br>
+                            ${audit.entityType ? `Entity: ${audit.entityType} (${audit.entityId})` : ''}
+                            ${audit.riskScore ? `| Risk: ${audit.riskScore}` : ''}<br><br>
+                        `;
+                    });
+                    auditsHtml += '</div>';
+                    resultDiv.innerHTML = auditsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching audit logs</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getRecentAuditsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User Audit History
+    async function getUserAuditHistory() {
+        const userId = document.getElementById('getUserAuditId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${AUDIT_BASE_URL}/user/${userId}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getUserAuditResult');
+
+            if (response.ok) {
+                const audits = await response.json();
+                if (audits.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No audit logs found for user ${userId}</div>`;
+                } else {
+                    let auditsHtml = `<div class="result success">✅ Found ${audits.length} audit log(s) for user ${userId}:<br><br>`;
+                    audits.slice(0, 10).forEach(audit => {
+                        const timestamp = new Date(audit.timestamp).toLocaleString();
+                        auditsHtml += `
+                            <strong>${audit.action}</strong> | ${audit.severity} | ${timestamp}<br>
+                            Success: ${audit.success ? '✅' : '❌'} | ${audit.description}<br><br>
+                        `;
+                    });
+                    if (audits.length > 10) {
+                        auditsHtml += `... and ${audits.length - 10} more<br>`;
+                    }
+                    auditsHtml += '</div>';
+                    resultDiv.innerHTML = auditsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching user audit history</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUserAuditResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Audits by Action
+    async function getAuditsByAction() {
+        const action = document.getElementById('getAuditsActionType').value;
+        if (!action) return;
+
+        try {
+            const response = await fetch(`${AUDIT_BASE_URL}/action/${action}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getAuditsActionResult');
+
+            if (response.ok) {
+                const audits = await response.json();
+                if (audits.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No audit logs found for action ${action}</div>`;
+                } else {
+                    let auditsHtml = `<div class="result success">✅ Found ${audits.length} audit log(s) for action ${action}:<br><br>`;
+                    audits.slice(0, 10).forEach(audit => {
+                        const timestamp = new Date(audit.timestamp).toLocaleString();
+                        auditsHtml += `
+                            <strong>${audit.username || 'N/A'}</strong> | ${audit.severity} | ${timestamp}<br>
+                            Success: ${audit.success ? '✅' : '❌'} | ${audit.description}<br><br>
+                        `;
+                    });
+                    if (audits.length > 10) {
+                        auditsHtml += `... and ${audits.length - 10} more<br>`;
+                    }
+                    auditsHtml += '</div>';
+                    resultDiv.innerHTML = auditsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching audits by action</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getAuditsActionResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Failed Operations
+    async function getFailedOperations() {
+        try {
+            const endDate = new Date().toISOString();
+            const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Last 24 hours
+
+            const response = await fetch(`${AUDIT_BASE_URL}/security/failed-operations?startDate=${startDate}&endDate=${endDate}`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getFailedOperationsResult');
+
+            if (response.ok) {
+                const audits = await response.json();
+                if (audits.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No failed operations in the last 24 hours</div>`;
+                } else {
+                    let auditsHtml = `<div class="result error">⚠️ Found ${audits.length} failed operation(s) in the last 24 hours:<br><br>`;
+                    audits.forEach(audit => {
+                        const timestamp = new Date(audit.timestamp).toLocaleString();
+                        auditsHtml += `
+                            <strong>${audit.action}</strong> | ${audit.severity} | ${timestamp}<br>
+                            User: ${audit.username || 'N/A'} | ${audit.description}<br>
+                            ${audit.errorMessage ? `Error: ${audit.errorMessage}` : ''}<br><br>
+                        `;
+                    });
+                    auditsHtml += '</div>';
+                    resultDiv.innerHTML = auditsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching failed operations</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getFailedOperationsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get High Risk Activities
+    async function getHighRiskActivities() {
+        try {
+            const response = await fetch(`${AUDIT_BASE_URL}/security/high-risk?riskThreshold=70`, {
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('getHighRiskResult');
+
+            if (response.ok) {
+                const audits = await response.json();
+                if (audits.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No high-risk activities found</div>`;
+                } else {
+                    let auditsHtml = `<div class="result error">⚠️ Found ${audits.length} high-risk activit(y/ies):<br><br>`;
+                    audits.forEach(audit => {
+                        const timestamp = new Date(audit.timestamp).toLocaleString();
+                        auditsHtml += `
+                            <strong>${audit.action}</strong> | Risk: ${audit.riskScore} | ${timestamp}<br>
+                            User: ${audit.username || 'N/A'} | ${audit.description}<br><br>
+                        `;
+                    });
+                    auditsHtml += '</div>';
+                    resultDiv.innerHTML = auditsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching high-risk activities</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getHighRiskResult').innerHTML =
                 `<div class="result error">❌ Error: ${error.message}</div>`;
         }
     }

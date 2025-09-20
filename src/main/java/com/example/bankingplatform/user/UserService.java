@@ -1,5 +1,8 @@
 package com.example.bankingplatform.user;
 
+import com.example.bankingplatform.audit.AuditAction;
+import com.example.bankingplatform.audit.AuditService;
+import com.example.bankingplatform.audit.AuditSeverity;
 import com.example.bankingplatform.security.JwtProvider;
 import com.example.bankingplatform.user.dto.LoginRequest;
 import com.example.bankingplatform.user.dto.SignupRequest;
@@ -19,13 +22,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final AuditService auditService;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtProvider jwtProvider) {
+                       JwtProvider jwtProvider,
+                       AuditService auditService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtProvider = jwtProvider;
+        this.auditService = auditService;
     }
 
     /**
@@ -51,6 +57,17 @@ public class UserService {
         // Save user
         User savedUser = userRepository.save(user);
 
+        // Log user creation
+        auditService.logEntityAction(
+            savedUser.getId(),
+            savedUser.getUsername(),
+            AuditAction.USER_CREATED,
+            AuditSeverity.MEDIUM,
+            "User account created successfully",
+            "User",
+            savedUser.getId().toString()
+        );
+
         // Generate JWT token
         String token = jwtProvider.generateToken(savedUser.getUsername(), savedUser.getRole().name());
 
@@ -61,19 +78,50 @@ public class UserService {
      * Authenticate user and return JWT token
      */
     public AuthResponse login(LoginRequest loginRequest) {
-        // Find user by username
-        User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
+        try {
+            // Find user by username
+            User user = userRepository.findByUsername(loginRequest.getUsername())
+                    .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
-        // Verify password
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Invalid username or password");
+            // Verify password
+            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                // Log failed login attempt
+                auditService.logFailedAction(
+                    user.getId(),
+                    user.getUsername(),
+                    AuditAction.LOGIN_FAILED,
+                    AuditSeverity.HIGH,
+                    "Failed login attempt - incorrect password",
+                    "Invalid password provided"
+                );
+                throw new InvalidCredentialsException("Invalid username or password");
+            }
+
+            // Log successful login
+            auditService.logAction(
+                user.getId(),
+                user.getUsername(),
+                AuditAction.LOGIN,
+                AuditSeverity.LOW,
+                "User logged in successfully"
+            );
+
+            // Generate JWT token
+            String token = jwtProvider.generateToken(user.getUsername(), user.getRole().name());
+
+            return new AuthResponse(token, user.getUsername(), user.getRole().name());
+        } catch (InvalidCredentialsException e) {
+            // Log failed login attempt with unknown user
+            auditService.logFailedAction(
+                null,
+                loginRequest.getUsername(),
+                AuditAction.LOGIN_FAILED,
+                AuditSeverity.CRITICAL,
+                "Failed login attempt - user not found",
+                "User '" + loginRequest.getUsername() + "' not found"
+            );
+            throw e;
         }
-
-        // Generate JWT token
-        String token = jwtProvider.generateToken(user.getUsername(), user.getRole().name());
-
-        return new AuthResponse(token, user.getUsername(), user.getRole().name());
     }
 
     /**

@@ -2,6 +2,9 @@ package com.example.bankingplatform.transaction;
 
 import com.example.bankingplatform.account.Account;
 import com.example.bankingplatform.account.AccountRepository;
+import com.example.bankingplatform.audit.AuditAction;
+import com.example.bankingplatform.audit.AuditService;
+import com.example.bankingplatform.audit.AuditSeverity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +23,13 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final AuditService auditService;
 
     @Autowired
-    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository) {
+    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository, AuditService auditService) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
+        this.auditService = auditService;
     }
 
     // Create deposit transaction
@@ -45,7 +50,19 @@ public class TransactionService {
         transaction.setDescription(description);
         transaction.setCurrency(account.getCurrency());
 
-        return transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        auditService.logEntityAction(
+            userId,
+            "User" + userId,
+            AuditAction.TRANSACTION_CREATED,
+            AuditSeverity.MEDIUM,
+            "Deposit transaction created - Amount: " + amount + " " + account.getCurrency(),
+            "Transaction",
+            savedTransaction.getId().toString()
+        );
+
+        return savedTransaction;
     }
 
     // Create withdrawal transaction
@@ -71,7 +88,19 @@ public class TransactionService {
         transaction.setDescription(description);
         transaction.setCurrency(account.getCurrency());
 
-        return transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        auditService.logEntityAction(
+            userId,
+            "User" + userId,
+            AuditAction.TRANSACTION_CREATED,
+            AuditSeverity.MEDIUM,
+            "Withdrawal transaction created - Amount: " + amount + " " + account.getCurrency(),
+            "Transaction",
+            savedTransaction.getId().toString()
+        );
+
+        return savedTransaction;
     }
 
     // Create transfer transaction
@@ -105,7 +134,19 @@ public class TransactionService {
         transaction.setDescription(description);
         transaction.setCurrency(fromAccount.getCurrency());
 
-        return transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        auditService.logEntityAction(
+            userId,
+            "User" + userId,
+            AuditAction.TRANSACTION_CREATED,
+            AuditSeverity.MEDIUM,
+            "Transfer transaction created - Amount: " + amount + " " + fromAccount.getCurrency() + " from Account " + fromAccountId + " to Account " + toAccountId,
+            "Transaction",
+            savedTransaction.getId().toString()
+        );
+
+        return savedTransaction;
     }
 
     // Process/Complete a transaction
@@ -126,12 +167,36 @@ public class TransactionService {
             transaction.setProcessedAt(LocalDateTime.now());
             transaction.setCompletedAt(LocalDateTime.now());
 
-            return transactionRepository.save(transaction);
+            Transaction completedTransaction = transactionRepository.save(transaction);
+
+            auditService.logChange(
+                transaction.getUserId(),
+                "User" + transaction.getUserId(),
+                AuditAction.TRANSACTION_PROCESSED,
+                AuditSeverity.MEDIUM,
+                "Transaction processed successfully - " + transaction.getTransactionType() + " for " + transaction.getAmount() + " " + transaction.getCurrency(),
+                "Transaction",
+                transactionId.toString(),
+                TransactionStatus.PENDING.toString(),
+                TransactionStatus.COMPLETED.toString()
+            );
+
+            return completedTransaction;
         } catch (Exception e) {
             // Mark transaction as failed
             transaction.setStatus(TransactionStatus.FAILED);
             transaction.setProcessedAt(LocalDateTime.now());
             transactionRepository.save(transaction);
+
+            auditService.logFailedAction(
+                transaction.getUserId(),
+                "User" + transaction.getUserId(),
+                AuditAction.TRANSACTION_PROCESSED,
+                AuditSeverity.HIGH,
+                "Transaction processing failed - " + transaction.getTransactionType() + " for " + transaction.getAmount() + " " + transaction.getCurrency(),
+                e.getMessage()
+            );
+
             throw new RuntimeException("Transaction processing failed: " + e.getMessage());
         }
     }
@@ -201,7 +266,21 @@ public class TransactionService {
         transaction.setStatus(TransactionStatus.CANCELLED);
         transaction.setProcessedAt(LocalDateTime.now());
 
-        return transactionRepository.save(transaction);
+        Transaction cancelledTransaction = transactionRepository.save(transaction);
+
+        auditService.logChange(
+            transaction.getUserId(),
+            "User" + transaction.getUserId(),
+            AuditAction.TRANSACTION_CANCELLED,
+            AuditSeverity.MEDIUM,
+            "Transaction cancelled - " + transaction.getTransactionType() + " for " + transaction.getAmount() + " " + transaction.getCurrency(),
+            "Transaction",
+            transactionId.toString(),
+            TransactionStatus.PENDING.toString(),
+            TransactionStatus.CANCELLED.toString()
+        );
+
+        return cancelledTransaction;
     }
 
     // Private helper methods

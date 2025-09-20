@@ -1,5 +1,8 @@
 package com.example.bankingplatform.account;
 
+import com.example.bankingplatform.audit.AuditAction;
+import com.example.bankingplatform.audit.AuditService;
+import com.example.bankingplatform.audit.AuditSeverity;
 import com.example.bankingplatform.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +19,12 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository accountRepository;
+    private final AuditService auditService;
 
     @Autowired
-    public AccountService(AccountRepository accountRepository) {
+    public AccountService(AccountRepository accountRepository, AuditService auditService) {
         this.accountRepository = accountRepository;
+        this.auditService = auditService;
     }
 
     public Account createAccount(User user, AccountType accountType, String accountName,
@@ -39,7 +44,20 @@ public class AccountService {
             currency
         );
 
-        return accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
+
+        // Log account creation
+        auditService.logEntityAction(
+            user.getId(),
+            user.getUsername(),
+            AuditAction.ACCOUNT_CREATED,
+            AuditSeverity.MEDIUM,
+            "Account created successfully - " + accountType + " account",
+            "Account",
+            savedAccount.getId().toString()
+        );
+
+        return savedAccount;
     }
 
     @Transactional(readOnly = true)
@@ -66,13 +84,29 @@ public class AccountService {
         Account account = accountRepository.findById(accountId)
             .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
 
+        AccountStatus oldStatus = account.getStatus();
         account.setStatus(newStatus);
 
         if (newStatus == AccountStatus.CLOSED) {
             account.setClosedAt(LocalDateTime.now());
         }
 
-        return accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
+
+        // Log status change
+        auditService.logChange(
+            account.getUser().getId(),
+            account.getUser().getUsername(),
+            AuditAction.ACCOUNT_STATUS_CHANGED,
+            AuditSeverity.MEDIUM,
+            "Account status changed from " + oldStatus + " to " + newStatus,
+            "Account",
+            accountId.toString(),
+            oldStatus.toString(),
+            newStatus.toString()
+        );
+
+        return savedAccount;
     }
 
     public Account updateBalance(Integer accountId, BigDecimal newBalance) {
@@ -83,10 +117,26 @@ public class AccountService {
             throw new IllegalArgumentException("Balance cannot be negative");
         }
 
+        BigDecimal oldBalance = account.getBalance();
         account.setBalance(newBalance);
         account.setAvailableBalance(newBalance); // Simplified - would need more complex logic for holds, etc.
 
-        return accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
+
+        // Log balance update
+        auditService.logChange(
+            account.getUser().getId(),
+            account.getUser().getUsername(),
+            AuditAction.BALANCE_UPDATED,
+            AuditSeverity.HIGH,
+            "Account balance updated from " + oldBalance + " to " + newBalance,
+            "Account",
+            accountId.toString(),
+            oldBalance.toString(),
+            newBalance.toString()
+        );
+
+        return savedAccount;
     }
 
     public void deleteAccount(Integer accountId) {
@@ -96,6 +146,17 @@ public class AccountService {
         if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
             throw new IllegalStateException("Cannot delete account with non-zero balance");
         }
+
+        // Log account deletion
+        auditService.logEntityAction(
+            account.getUser().getId(),
+            account.getUser().getUsername(),
+            AuditAction.ACCOUNT_DELETED,
+            AuditSeverity.HIGH,
+            "Account deleted - " + account.getAccountType() + " account " + account.getAccountNum(),
+            "Account",
+            accountId.toString()
+        );
 
         accountRepository.delete(account);
     }
