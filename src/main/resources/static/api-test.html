@@ -523,6 +523,512 @@
             </div>
         </div>
 
+        <!-- Billing Management -->
+        <div class="section">
+            <h2>💳 Billing Management</h2>
+
+            <!-- Create Billing -->
+            <h3>Create New Billing</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="createBillingUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Account ID (Optional):</label>
+                    <input type="number" id="createBillingAccountId" placeholder="Account ID">
+                </div>
+                <div class="form-group">
+                    <label>Billing Type:</label>
+                    <select id="createBillingType">
+                        <option value="INVOICE">INVOICE</option>
+                        <option value="SERVICE_FEE">SERVICE_FEE</option>
+                        <option value="MAINTENANCE_FEE">MAINTENANCE_FEE</option>
+                        <option value="OVERDRAFT_FEE">OVERDRAFT_FEE</option>
+                        <option value="TRANSACTION_FEE">TRANSACTION_FEE</option>
+                        <option value="MONTHLY_STATEMENT">MONTHLY_STATEMENT</option>
+                        <option value="PENALTY_FEE">PENALTY_FEE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="createBillingAmount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="createBillingDescription" placeholder="Billing description" required>
+                </div>
+                <div class="form-group">
+                    <label>Due Date:</label>
+                    <input type="date" id="createBillingDueDate" required>
+                </div>
+            </div>
+            <button class="btn" onclick="createBilling()">Create Billing</button>
+            <div id="createBillingResult"></div>
+
+            <!-- Create Subscription -->
+            <h3>Create Subscription Billing</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="createSubUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Account ID (Optional):</label>
+                    <input type="number" id="createSubAccountId" placeholder="Account ID">
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="createSubAmount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="createSubDescription" placeholder="Subscription description" required>
+                </div>
+                <div class="form-group">
+                    <label>Frequency:</label>
+                    <select id="createSubFrequency">
+                        <option value="MONTHLY">MONTHLY</option>
+                        <option value="WEEKLY">WEEKLY</option>
+                        <option value="QUARTERLY">QUARTERLY</option>
+                        <option value="SEMI_ANNUALLY">SEMI_ANNUALLY</option>
+                        <option value="ANNUALLY">ANNUALLY</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Start Date:</label>
+                    <input type="date" id="createSubStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label>End Date:</label>
+                    <input type="date" id="createSubEndDate" required>
+                </div>
+            </div>
+            <button class="btn success" onclick="createSubscription()">Create Subscription</button>
+            <div id="createSubscriptionResult"></div>
+        </div>
+
+        <!-- Billing Lookup -->
+        <div class="section">
+            <h2>🔍 Billing Lookup</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Get Billing by ID:</label>
+                    <input type="number" id="getBillingId" placeholder="Billing ID">
+                    <button class="btn secondary" onclick="getBillingById()">Get Billing</button>
+                    <div id="getBillingByIdResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Billing by Reference:</label>
+                    <input type="text" id="getBillingRef" placeholder="Billing Reference">
+                    <button class="btn secondary" onclick="getBillingByReference()">Get Billing</button>
+                    <div id="getBillingByRefResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get User's Billings:</label>
+                    <input type="number" id="getUserBillingsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUserBillings()">Get Billings</button>
+                    <div id="getUserBillingsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Unpaid Billings:</label>
+                    <input type="number" id="getUnpaidBillingsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUnpaidBillings()">Get Unpaid</button>
+                    <div id="getUnpaidBillingsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Overdue Billings:</label>
+                    <button class="btn secondary" onclick="getOverdueBillings()">Get Overdue</button>
+                    <div id="getOverdueBillingsResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Operations -->
+        <div class="section">
+            <h2>⚙️ Billing Operations</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Process Payment:</label>
+                    <input type="number" id="paymentBillingId" placeholder="Billing ID">
+                    <input type="number" id="paymentAmount" placeholder="Payment Amount" step="0.01">
+                    <input type="number" id="paymentTransactionId" placeholder="Transaction ID">
+                    <button class="btn success" onclick="processPayment()">Process Payment</button>
+                    <div id="processPaymentResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Apply Discount:</label>
+                    <input type="number" id="discountBillingId" placeholder="Billing ID">
+                    <input type="number" id="discountAmount" placeholder="Discount Amount" step="0.01">
+                    <button class="btn" onclick="applyDiscount()">Apply Discount</button>
+                    <div id="applyDiscountResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Update Status:</label>
+                    <input type="number" id="updateBillingStatusId" placeholder="Billing ID">
+                    <select id="updateBillingStatusValue">
+                        <option value="PENDING">PENDING</option>
+                        <option value="SENT">SENT</option>
+                        <option value="OVERDUE">OVERDUE</option>
+                        <option value="PAID">PAID</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                        <option value="REFUNDED">REFUNDED</option>
+                        <option value="DISPUTED">DISPUTED</option>
+                    </select>
+                    <button class="btn" onclick="updateBillingStatus()">Update Status</button>
+                    <div id="updateBillingStatusResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Delete Billing:</label>
+                    <input type="number" id="deleteBillingId" placeholder="Billing ID">
+                    <button class="btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="deleteBilling()">Delete Billing</button>
+                    <div id="deleteBillingResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Management -->
+        <div class="section">
+            <h2>🏦 Loan Management</h2>
+
+            <!-- Create Loan Application -->
+            <h3>Create Loan Application</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="createLoanUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Disbursement Account ID (Optional):</label>
+                    <input type="number" id="createLoanAccountId" placeholder="Account ID">
+                </div>
+                <div class="form-group">
+                    <label>Loan Type:</label>
+                    <select id="createLoanType">
+                        <option value="PERSONAL">PERSONAL</option>
+                        <option value="MORTGAGE">MORTGAGE</option>
+                        <option value="AUTO">AUTO</option>
+                        <option value="BUSINESS">BUSINESS</option>
+                        <option value="STUDENT">STUDENT</option>
+                        <option value="HOME_EQUITY">HOME_EQUITY</option>
+                        <option value="CREDIT_LINE">CREDIT_LINE</option>
+                        <option value="PAYDAY">PAYDAY</option>
+                        <option value="INSTALLMENT">INSTALLMENT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Principal Amount:</label>
+                    <input type="number" id="createLoanAmount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Interest Rate (as decimal, e.g., 0.05 for 5%):</label>
+                    <input type="number" id="createLoanInterestRate" placeholder="0.05" step="0.0001" required>
+                </div>
+                <div class="form-group">
+                    <label>Term (Months):</label>
+                    <input type="number" id="createLoanTermMonths" placeholder="12" required>
+                </div>
+                <div class="form-group">
+                    <label>Payment Frequency:</label>
+                    <select id="createLoanFrequency">
+                        <option value="WEEKLY">WEEKLY</option>
+                        <option value="MONTHLY" selected>MONTHLY</option>
+                        <option value="QUARTERLY">QUARTERLY</option>
+                        <option value="SEMI_ANNUALLY">SEMI_ANNUALLY</option>
+                        <option value="ANNUALLY">ANNUALLY</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Purpose:</label>
+                    <input type="text" id="createLoanPurpose" placeholder="Loan purpose" required>
+                </div>
+            </div>
+            <button class="btn" onclick="createLoan()">Create Loan Application</button>
+            <div id="createLoanResult"></div>
+        </div>
+
+        <!-- Loan Lookup -->
+        <div class="section">
+            <h2>🔍 Loan Lookup</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Get Loan by ID:</label>
+                    <input type="number" id="getLoanId" placeholder="Loan ID">
+                    <button class="btn secondary" onclick="getLoanById()">Get Loan</button>
+                    <div id="getLoanByIdResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Loan by Reference:</label>
+                    <input type="text" id="getLoanRef" placeholder="Loan Reference">
+                    <button class="btn secondary" onclick="getLoanByReference()">Get Loan</button>
+                    <div id="getLoanByRefResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get User's Loans:</label>
+                    <input type="number" id="getUserLoansId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUserLoans()">Get Loans</button>
+                    <div id="getUserLoansResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Active Loans:</label>
+                    <input type="number" id="getActiveLoansId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getActiveLoans()">Get Active</button>
+                    <div id="getActiveLoansResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Delinquent Loans:</label>
+                    <button class="btn secondary" onclick="getDelinquentLoans()">Get Delinquent</button>
+                    <div id="getDelinquentLoansResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Loans by Status:</label>
+                    <select id="getLoansByStatusValue">
+                        <option value="PENDING">PENDING</option>
+                        <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="REJECTED">REJECTED</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="CLOSED">CLOSED</option>
+                        <option value="DEFAULTED">DEFAULTED</option>
+                    </select>
+                    <button class="btn secondary" onclick="getLoansByStatus()">Get by Status</button>
+                    <div id="getLoansByStatusResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Operations -->
+        <div class="section">
+            <h2>⚙️ Loan Operations</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Approve Loan:</label>
+                    <input type="number" id="approveLoanId" placeholder="Loan ID">
+                    <input type="text" id="approvedBy" placeholder="Approved By">
+                    <button class="btn success" onclick="approveLoan()">Approve</button>
+                    <div id="approveLoanResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Reject Loan:</label>
+                    <input type="number" id="rejectLoanId" placeholder="Loan ID">
+                    <input type="text" id="rejectedBy" placeholder="Rejected By">
+                    <button class="btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="rejectLoan()">Reject</button>
+                    <div id="rejectLoanResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Disburse Loan:</label>
+                    <input type="number" id="disburseLoanId" placeholder="Loan ID">
+                    <input type="text" id="disbursedBy" placeholder="Disbursed By">
+                    <button class="btn success" onclick="disburseLoan()">Disburse</button>
+                    <div id="disburseLoanResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Process Payment:</label>
+                    <input type="number" id="loanPaymentId" placeholder="Loan ID">
+                    <input type="number" id="loanPaymentAmount" placeholder="Payment Amount" step="0.01">
+                    <input type="number" id="loanTransactionId" placeholder="Transaction ID">
+                    <button class="btn success" onclick="processLoanPayment()">Process Payment</button>
+                    <div id="processLoanPaymentResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Update Loan Status:</label>
+                    <input type="number" id="updateLoanStatusId" placeholder="Loan ID">
+                    <select id="updateLoanStatusValue">
+                        <option value="PENDING">PENDING</option>
+                        <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="REJECTED">REJECTED</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="CLOSED">CLOSED</option>
+                        <option value="DEFAULTED">DEFAULTED</option>
+                        <option value="DEFERRED">DEFERRED</option>
+                        <option value="CHARGED_OFF">CHARGED_OFF</option>
+                    </select>
+                    <button class="btn" onclick="updateLoanStatus()">Update Status</button>
+                    <div id="updateLoanStatusResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Mark Delinquent:</label>
+                    <input type="number" id="delinquentLoanId" placeholder="Loan ID">
+                    <input type="number" id="daysDelinquent" placeholder="Days Delinquent">
+                    <button class="btn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);" onclick="markDelinquent()">Mark Delinquent</button>
+                    <div id="markDelinquentResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Delete Loan:</label>
+                    <input type="number" id="deleteLoanId" placeholder="Loan ID">
+                    <button class="btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="deleteLoan()">Delete Loan</button>
+                    <div id="deleteLoanResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Management -->
+        <div class="section">
+            <h2>📊 Report Management</h2>
+
+            <!-- Request Report -->
+            <h3>Request Report</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="requestReportUserId" placeholder="User ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Report Type:</label>
+                    <select id="requestReportType">
+                        <option value="ACCOUNT_SUMMARY">ACCOUNT_SUMMARY</option>
+                        <option value="TRANSACTION_HISTORY">TRANSACTION_HISTORY</option>
+                        <option value="LOAN_PORTFOLIO">LOAN_PORTFOLIO</option>
+                        <option value="BILLING_SUMMARY">BILLING_SUMMARY</option>
+                        <option value="AUDIT_LOG">AUDIT_LOG</option>
+                        <option value="FINANCIAL_STATEMENT">FINANCIAL_STATEMENT</option>
+                        <option value="USER_ACTIVITY">USER_ACTIVITY</option>
+                        <option value="DELINQUENCY_REPORT">DELINQUENCY_REPORT</option>
+                        <option value="PAYMENT_COLLECTION">PAYMENT_COLLECTION</option>
+                        <option value="REGULATORY_COMPLIANCE">REGULATORY_COMPLIANCE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Title:</label>
+                    <input type="text" id="requestReportTitle" placeholder="Report title" required>
+                </div>
+                <div class="form-group">
+                    <label>Format:</label>
+                    <select id="requestReportFormat">
+                        <option value="PDF">PDF</option>
+                        <option value="CSV">CSV</option>
+                        <option value="EXCEL">EXCEL</option>
+                        <option value="JSON">JSON</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Start Date:</label>
+                    <input type="date" id="requestReportStartDate">
+                </div>
+                <div class="form-group">
+                    <label>End Date:</label>
+                    <input type="date" id="requestReportEndDate">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="requestReportDescription" placeholder="Report description">
+                </div>
+                <div class="form-group">
+                    <label>Parameters (JSON):</label>
+                    <input type="text" id="requestReportParameters" placeholder='{"key": "value"}'>
+                </div>
+            </div>
+            <button class="btn" onclick="requestReport()">Request Report</button>
+            <div id="requestReportResult"></div>
+        </div>
+
+        <!-- Report Lookup -->
+        <div class="section">
+            <h2>🔍 Report Lookup</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Get Report by ID:</label>
+                    <input type="number" id="getReportId" placeholder="Report ID">
+                    <button class="btn secondary" onclick="getReportById()">Get Report</button>
+                    <div id="getReportByIdResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Report by Reference:</label>
+                    <input type="text" id="getReportRef" placeholder="Report Reference">
+                    <button class="btn secondary" onclick="getReportByReference()">Get Report</button>
+                    <div id="getReportByRefResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get User's Reports:</label>
+                    <input type="number" id="getUserReportsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getUserReports()">Get Reports</button>
+                    <div id="getUserReportsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Recent Reports:</label>
+                    <input type="number" id="getRecentReportsId" placeholder="User ID">
+                    <button class="btn secondary" onclick="getRecentReports()">Get Recent</button>
+                    <div id="getRecentReportsResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Reports by Status:</label>
+                    <select id="getReportsByStatusValue">
+                        <option value="PENDING">PENDING</option>
+                        <option value="GENERATING">GENERATING</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="FAILED">FAILED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                        <option value="EXPIRED">EXPIRED</option>
+                    </select>
+                    <button class="btn secondary" onclick="getReportsByStatus()">Get by Status</button>
+                    <div id="getReportsByStatusResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Get Pending Reports:</label>
+                    <button class="btn secondary" onclick="getPendingReports()">Get Pending</button>
+                    <div id="getPendingReportsResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Operations -->
+        <div class="section">
+            <h2>⚙️ Report Operations</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Start Generation:</label>
+                    <input type="number" id="startReportId" placeholder="Report ID">
+                    <input type="text" id="generatedBy" placeholder="Generated By">
+                    <button class="btn success" onclick="startReportGeneration()">Start Generation</button>
+                    <div id="startReportResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Complete Generation:</label>
+                    <input type="number" id="completeReportId" placeholder="Report ID">
+                    <input type="text" id="reportFilePath" placeholder="File Path">
+                    <input type="text" id="reportFileName" placeholder="File Name">
+                    <input type="number" id="reportFileSize" placeholder="File Size (bytes)">
+                    <input type="text" id="reportContentType" placeholder="Content Type">
+                    <input type="number" id="reportRecordCount" placeholder="Record Count">
+                    <button class="btn success" onclick="completeReportGeneration()">Complete</button>
+                    <div id="completeReportResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Fail Generation:</label>
+                    <input type="number" id="failReportId" placeholder="Report ID">
+                    <input type="text" id="reportErrorMessage" placeholder="Error Message">
+                    <button class="btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="failReportGeneration()">Mark Failed</button>
+                    <div id="failReportResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Cancel Report:</label>
+                    <input type="number" id="cancelReportId" placeholder="Report ID">
+                    <input type="text" id="cancelledBy" placeholder="Cancelled By">
+                    <button class="btn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);" onclick="cancelReport()">Cancel</button>
+                    <div id="cancelReportResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Log Download:</label>
+                    <input type="number" id="downloadReportId" placeholder="Report ID">
+                    <input type="text" id="downloadedBy" placeholder="Downloaded By">
+                    <button class="btn" onclick="logReportDownload()">Log Download</button>
+                    <div id="logDownloadResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Cleanup Expired:</label>
+                    <button class="btn" onclick="cleanupExpiredReports()">Cleanup Expired</button>
+                    <div id="cleanupResult"></div>
+                </div>
+                <div class="form-group">
+                    <label>Delete Report:</label>
+                    <input type="number" id="deleteReportId" placeholder="Report ID">
+                    <button class="btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);" onclick="deleteReport()">Delete Report</button>
+                    <div id="deleteReportResult"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Audit Testing -->
         <div class="section">
             <h2>📊 Audit Logs & Security Testing</h2>
@@ -608,7 +1114,60 @@
                 • <code>GET /api/audits/security/failed-operations</code> - Get failed operations<br>
                 • <code>GET /api/audits/security/high-risk</code> - Get high-risk activities<br>
                 • <code>GET /api/audits/security/critical-events</code> - Get critical security events<br>
-                • <code>GET /api/audits/entity/{entityType}/{entityId}</code> - Get entity audit history
+                • <code>GET /api/audits/entity/{entityType}/{entityId}</code> - Get entity audit history<br><br>
+
+                <strong>Billing Endpoints:</strong><br>
+                • <code>POST /api/billings</code> - Create new billing<br>
+                • <code>POST /api/billings/subscription</code> - Create subscription billing<br>
+                • <code>GET /api/billings/{id}</code> - Get billing by ID<br>
+                • <code>GET /api/billings/reference/{reference}</code> - Get billing by reference<br>
+                • <code>GET /api/billings/user/{userId}</code> - Get user's billings<br>
+                • <code>GET /api/billings/user/{userId}/unpaid</code> - Get user's unpaid billings<br>
+                • <code>GET /api/billings/account/{accountId}</code> - Get account billings<br>
+                • <code>GET /api/billings/type/{billingType}</code> - Get billings by type<br>
+                • <code>GET /api/billings/overdue</code> - Get overdue billings<br>
+                • <code>PUT /api/billings/{id}/status</code> - Update billing status<br>
+                • <code>PUT /api/billings/{id}/payment</code> - Process payment<br>
+                • <code>PUT /api/billings/{id}/discount</code> - Apply discount<br>
+                • <code>DELETE /api/billings/{id}</code> - Delete billing<br><br>
+
+                <strong>Loan Endpoints:</strong><br>
+                • <code>POST /api/loans</code> - Create loan application<br>
+                • <code>GET /api/loans/{id}</code> - Get loan by ID<br>
+                • <code>GET /api/loans/reference/{reference}</code> - Get loan by reference<br>
+                • <code>GET /api/loans/user/{userId}</code> - Get user's loans<br>
+                • <code>GET /api/loans/user/{userId}/active</code> - Get user's active loans<br>
+                • <code>GET /api/loans/status/{status}</code> - Get loans by status<br>
+                • <code>GET /api/loans/type/{loanType}</code> - Get loans by type<br>
+                • <code>GET /api/loans/delinquent</code> - Get delinquent loans<br>
+                • <code>GET /api/loans/maturing</code> - Get loans maturing soon<br>
+                • <code>PUT /api/loans/{id}/approve</code> - Approve loan<br>
+                • <code>PUT /api/loans/{id}/reject</code> - Reject loan<br>
+                • <code>PUT /api/loans/{id}/disburse</code> - Disburse loan<br>
+                • <code>PUT /api/loans/{id}/payment</code> - Process loan payment<br>
+                • <code>PUT /api/loans/{id}/status</code> - Update loan status<br>
+                • <code>PUT /api/loans/{id}/delinquent</code> - Mark loan as delinquent<br>
+                • <code>DELETE /api/loans/{id}</code> - Delete loan<br><br>
+
+                <strong>Report Endpoints:</strong><br>
+                • <code>POST /api/reports</code> - Request new report<br>
+                • <code>GET /api/reports/{id}</code> - Get report by ID<br>
+                • <code>GET /api/reports/reference/{reference}</code> - Get report by reference<br>
+                • <code>GET /api/reports/user/{userId}</code> - Get user's reports<br>
+                • <code>GET /api/reports/user/{userId}/recent</code> - Get user's recent reports<br>
+                • <code>GET /api/reports/status/{status}</code> - Get reports by status<br>
+                • <code>GET /api/reports/type/{reportType}</code> - Get reports by type<br>
+                • <code>GET /api/reports/format/{format}</code> - Get reports by format<br>
+                • <code>GET /api/reports/pending</code> - Get pending reports<br>
+                • <code>GET /api/reports/expired</code> - Get expired reports<br>
+                • <code>GET /api/reports/stuck</code> - Get stuck reports<br>
+                • <code>PUT /api/reports/{id}/start</code> - Start report generation<br>
+                • <code>PUT /api/reports/{id}/complete</code> - Complete report generation<br>
+                • <code>PUT /api/reports/{id}/fail</code> - Mark report as failed<br>
+                • <code>PUT /api/reports/{id}/cancel</code> - Cancel report<br>
+                • <code>POST /api/reports/{id}/download</code> - Log report download<br>
+                • <code>POST /api/reports/cleanup-expired</code> - Cleanup expired reports<br>
+                • <code>DELETE /api/reports/{id}</code> - Delete report
             </div>
         </div>
     </div>
@@ -1492,6 +2051,1412 @@
             }
         } catch (error) {
             document.getElementById('getRecentTransactionsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // ===== BILLING TESTING FUNCTIONS =====
+    const BILLING_BASE_URL = 'http://localhost:8080/api/billings';
+
+    // Create Billing
+    async function createBilling() {
+        const billingData = {
+            userId: parseInt(document.getElementById('createBillingUserId').value),
+            accountId: document.getElementById('createBillingAccountId').value ?
+                parseInt(document.getElementById('createBillingAccountId').value) : null,
+            billingType: document.getElementById('createBillingType').value,
+            amount: parseFloat(document.getElementById('createBillingAmount').value),
+            description: document.getElementById('createBillingDescription').value,
+            dueDate: document.getElementById('createBillingDueDate').value
+        };
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(billingData)
+            });
+
+            const resultDiv = document.getElementById('createBillingResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Billing created successfully!<br>
+                        <strong>Billing ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.billingReference}<br>
+                        <strong>Type:</strong> ${data.billingType}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Due Date:</strong> ${data.dueDate}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Billing creation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('createBillingResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Create Subscription
+    async function createSubscription() {
+        const subscriptionData = {
+            userId: parseInt(document.getElementById('createSubUserId').value),
+            accountId: document.getElementById('createSubAccountId').value ?
+                parseInt(document.getElementById('createSubAccountId').value) : null,
+            amount: parseFloat(document.getElementById('createSubAmount').value),
+            description: document.getElementById('createSubDescription').value,
+            frequency: document.getElementById('createSubFrequency').value,
+            startDate: document.getElementById('createSubStartDate').value,
+            endDate: document.getElementById('createSubEndDate').value
+        };
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/subscription`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(subscriptionData)
+            });
+
+            const resultDiv = document.getElementById('createSubscriptionResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Subscription created successfully!<br>
+                        <strong>Billing ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.billingReference}<br>
+                        <strong>Type:</strong> ${data.billingType}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Frequency:</strong> ${data.frequency}<br>
+                        <strong>Start:</strong> ${data.subscriptionStartDate}<br>
+                        <strong>End:</strong> ${data.subscriptionEndDate}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Subscription creation failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('createSubscriptionResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Billing by ID
+    async function getBillingById() {
+        const billingId = document.getElementById('getBillingId').value;
+        if (!billingId) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/${billingId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getBillingByIdResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Billing found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.billingReference}<br>
+                        <strong>Type:</strong> ${data.billingType}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.amount}<br>
+                        <strong>Total:</strong> ${data.currency} ${data.totalAmount}<br>
+                        <strong>Paid:</strong> ${data.currency} ${data.paidAmount || 0}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Due Date:</strong> ${data.dueDate}<br>
+                        <strong>User ID:</strong> ${data.user.id}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Billing not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getBillingByIdResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Billing by Reference
+    async function getBillingByReference() {
+        const billingRef = document.getElementById('getBillingRef').value;
+        if (!billingRef) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/reference/${encodeURIComponent(billingRef)}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getBillingByRefResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Billing found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.billingReference}<br>
+                        <strong>Type:</strong> ${data.billingType}<br>
+                        <strong>Amount:</strong> ${data.currency} ${data.totalAmount}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Billing not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getBillingByRefResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User's Billings
+    async function getUserBillings() {
+        const userId = document.getElementById('getUserBillingsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/user/${userId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getUserBillingsResult');
+
+            if (response.ok) {
+                const billings = await response.json();
+                if (billings.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No billings found for user ${userId}</div>`;
+                } else {
+                    let billingsHtml = `<div class="result success">✅ Found ${billings.length} billing(s):<br>`;
+                    billings.slice(0, 5).forEach(bill => {
+                        billingsHtml += `<strong>${bill.billingReference}</strong> - ${bill.billingType} ${bill.currency} ${bill.totalAmount} [${bill.status}] Due: ${bill.dueDate}<br>`;
+                    });
+                    if (billings.length > 5) {
+                        billingsHtml += `... and ${billings.length - 5} more<br>`;
+                    }
+                    billingsHtml += '</div>';
+                    resultDiv.innerHTML = billingsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching billings</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUserBillingsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Unpaid Billings
+    async function getUnpaidBillings() {
+        const userId = document.getElementById('getUnpaidBillingsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/user/${userId}/unpaid`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getUnpaidBillingsResult');
+
+            if (response.ok) {
+                const billings = await response.json();
+                if (billings.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No unpaid billings for user ${userId}</div>`;
+                } else {
+                    let billingsHtml = `<div class="result info">ℹ️ Found ${billings.length} unpaid billing(s):<br>`;
+                    billings.forEach(bill => {
+                        billingsHtml += `<strong>${bill.billingReference}</strong> - ${bill.billingType} ${bill.currency} ${bill.totalAmount} [${bill.status}] Due: ${bill.dueDate}<br>`;
+                    });
+                    billingsHtml += '</div>';
+                    resultDiv.innerHTML = billingsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching unpaid billings</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUnpaidBillingsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Overdue Billings
+    async function getOverdueBillings() {
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/overdue`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getOverdueBillingsResult');
+
+            if (response.ok) {
+                const billings = await response.json();
+                if (billings.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No overdue billings found</div>`;
+                } else {
+                    let billingsHtml = `<div class="result error">⚠️ Found ${billings.length} overdue billing(s):<br>`;
+                    billings.slice(0, 10).forEach(bill => {
+                        billingsHtml += `<strong>${bill.billingReference}</strong> - ${bill.billingType} ${bill.currency} ${bill.totalAmount} Due: ${bill.dueDate}<br>`;
+                    });
+                    if (billings.length > 10) {
+                        billingsHtml += `... and ${billings.length - 10} more<br>`;
+                    }
+                    billingsHtml += '</div>';
+                    resultDiv.innerHTML = billingsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching overdue billings</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getOverdueBillingsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Process Payment
+    async function processPayment() {
+        const billingId = document.getElementById('paymentBillingId').value;
+        const paymentAmount = document.getElementById('paymentAmount').value;
+        const transactionId = document.getElementById('paymentTransactionId').value;
+
+        if (!billingId || !paymentAmount) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/${billingId}/payment`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    paymentAmount: parseFloat(paymentAmount),
+                    transactionId: transactionId ? parseInt(transactionId) : null
+                })
+            });
+
+            const resultDiv = document.getElementById('processPaymentResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Payment processed successfully!<br>
+                        <strong>Billing:</strong> ${data.billingReference}<br>
+                        <strong>Total Paid:</strong> ${data.currency} ${data.paidAmount}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Payment processing failed</div>`;
+            }
+        } catch (error) {
+            document.getElementById('processPaymentResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Apply Discount
+    async function applyDiscount() {
+        const billingId = document.getElementById('discountBillingId').value;
+        const discountAmount = document.getElementById('discountAmount').value;
+
+        if (!billingId || !discountAmount) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/${billingId}/discount`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    discountAmount: parseFloat(discountAmount)
+                })
+            });
+
+            const resultDiv = document.getElementById('applyDiscountResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Discount applied successfully!<br>
+                        <strong>Billing:</strong> ${data.billingReference}<br>
+                        <strong>Discount:</strong> ${data.currency} ${data.discountAmount}<br>
+                        <strong>New Total:</strong> ${data.currency} ${data.totalAmount}
+                    </div>
+                `;
+            } else if (response.status === 400) {
+                resultDiv.innerHTML = `<div class="result error">❌ Cannot apply discount to paid billing</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Billing not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('applyDiscountResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Update Billing Status
+    async function updateBillingStatus() {
+        const billingId = document.getElementById('updateBillingStatusId').value;
+        const newStatus = document.getElementById('updateBillingStatusValue').value;
+        if (!billingId || !newStatus) return;
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/${billingId}/status`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            const resultDiv = document.getElementById('updateBillingStatusResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Status updated successfully!<br>
+                        <strong>Billing:</strong> ${data.billingReference}<br>
+                        <strong>New Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Status update failed</div>`;
+            }
+        } catch (error) {
+            document.getElementById('updateBillingStatusResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Delete Billing
+    async function deleteBilling() {
+        const billingId = document.getElementById('deleteBillingId').value;
+        if (!billingId) return;
+
+        if (!confirm('Are you sure you want to delete this billing? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${BILLING_BASE_URL}/${billingId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('deleteBillingResult');
+
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Billing deleted successfully!
+                    </div>
+                `;
+            } else if (response.status === 400) {
+                resultDiv.innerHTML = `<div class="result error">❌ Cannot delete paid billing</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Billing not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('deleteBillingResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // ===== LOAN TESTING FUNCTIONS =====
+    const LOAN_BASE_URL = 'http://localhost:8080/api/loans';
+
+    // Create Loan Application
+    async function createLoan() {
+        const loanData = {
+            userId: parseInt(document.getElementById('createLoanUserId').value),
+            disbursementAccountId: document.getElementById('createLoanAccountId').value ?
+                parseInt(document.getElementById('createLoanAccountId').value) : null,
+            loanType: document.getElementById('createLoanType').value,
+            principalAmount: parseFloat(document.getElementById('createLoanAmount').value),
+            interestRate: parseFloat(document.getElementById('createLoanInterestRate').value),
+            termMonths: parseInt(document.getElementById('createLoanTermMonths').value),
+            paymentFrequency: document.getElementById('createLoanFrequency').value,
+            purpose: document.getElementById('createLoanPurpose').value
+        };
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(loanData)
+            });
+
+            const resultDiv = document.getElementById('createLoanResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan application created successfully!<br>
+                        <strong>Loan ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.loanReference}<br>
+                        <strong>Type:</strong> ${data.loanType}<br>
+                        <strong>Principal:</strong> ${data.currency} ${data.principalAmount}<br>
+                        <strong>Interest Rate:</strong> ${(data.interestRate * 100).toFixed(2)}%<br>
+                        <strong>Term:</strong> ${data.termMonths} months<br>
+                        <strong>Monthly Payment:</strong> ${data.currency} ${data.monthlyPayment}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Loan application failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('createLoanResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Loan by ID
+    async function getLoanById() {
+        const loanId = document.getElementById('getLoanId').value;
+        if (!loanId) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getLoanByIdResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.loanReference}<br>
+                        <strong>Type:</strong> ${data.loanType}<br>
+                        <strong>Principal:</strong> ${data.currency} ${data.principalAmount}<br>
+                        <strong>Current Balance:</strong> ${data.currency} ${data.currentBalance}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>User ID:</strong> ${data.user.id}<br>
+                        <strong>Maturity Date:</strong> ${data.maturityDate}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Loan not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getLoanByIdResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Loan by Reference
+    async function getLoanByReference() {
+        const loanRef = document.getElementById('getLoanRef').value;
+        if (!loanRef) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/reference/${encodeURIComponent(loanRef)}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getLoanByRefResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.loanReference}<br>
+                        <strong>Type:</strong> ${data.loanType}<br>
+                        <strong>Principal:</strong> ${data.currency} ${data.principalAmount}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Loan not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getLoanByRefResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User's Loans
+    async function getUserLoans() {
+        const userId = document.getElementById('getUserLoansId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/user/${userId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getUserLoansResult');
+
+            if (response.ok) {
+                const loans = await response.json();
+                if (loans.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No loans found for user ${userId}</div>`;
+                } else {
+                    let loansHtml = `<div class="result success">✅ Found ${loans.length} loan(s):<br>`;
+                    loans.slice(0, 5).forEach(loan => {
+                        loansHtml += `<strong>${loan.loanReference}</strong> - ${loan.loanType} ${loan.currency} ${loan.principalAmount} [${loan.status}]<br>`;
+                    });
+                    if (loans.length > 5) {
+                        loansHtml += `... and ${loans.length - 5} more<br>`;
+                    }
+                    loansHtml += '</div>';
+                    resultDiv.innerHTML = loansHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching loans</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUserLoansResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Active Loans
+    async function getActiveLoans() {
+        const userId = document.getElementById('getActiveLoansId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/user/${userId}/active`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getActiveLoansResult');
+
+            if (response.ok) {
+                const loans = await response.json();
+                if (loans.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No active loans for user ${userId}</div>`;
+                } else {
+                    let loansHtml = `<div class="result info">ℹ️ Found ${loans.length} active loan(s):<br>`;
+                    loans.forEach(loan => {
+                        loansHtml += `<strong>${loan.loanReference}</strong> - ${loan.loanType} Balance: ${loan.currency} ${loan.currentBalance}<br>`;
+                    });
+                    loansHtml += '</div>';
+                    resultDiv.innerHTML = loansHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching active loans</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getActiveLoansResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Delinquent Loans
+    async function getDelinquentLoans() {
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/delinquent`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getDelinquentLoansResult');
+
+            if (response.ok) {
+                const loans = await response.json();
+                if (loans.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No delinquent loans found</div>`;
+                } else {
+                    let loansHtml = `<div class="result warning">⚠️ Found ${loans.length} delinquent loan(s):<br>`;
+                    loans.forEach(loan => {
+                        loansHtml += `<strong>${loan.loanReference}</strong> - ${loan.daysDelinquent} days overdue<br>`;
+                    });
+                    loansHtml += '</div>';
+                    resultDiv.innerHTML = loansHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching delinquent loans</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getDelinquentLoansResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Loans by Status
+    async function getLoansByStatus() {
+        const status = document.getElementById('getLoansByStatusValue').value;
+        if (!status) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/status/${status}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getLoansByStatusResult');
+
+            if (response.ok) {
+                const loans = await response.json();
+                if (loans.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No loans found with status ${status}</div>`;
+                } else {
+                    let loansHtml = `<div class="result success">✅ Found ${loans.length} ${status} loan(s):<br>`;
+                    loans.slice(0, 5).forEach(loan => {
+                        loansHtml += `<strong>${loan.loanReference}</strong> - ${loan.loanType} ${loan.currency} ${loan.principalAmount}<br>`;
+                    });
+                    if (loans.length > 5) {
+                        loansHtml += `... and ${loans.length - 5} more<br>`;
+                    }
+                    loansHtml += '</div>';
+                    resultDiv.innerHTML = loansHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching loans by status</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getLoansByStatusResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Approve Loan
+    async function approveLoan() {
+        const loanId = document.getElementById('approveLoanId').value;
+        const approvedBy = document.getElementById('approvedBy').value;
+        if (!loanId || !approvedBy) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}/approve`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ approvedBy: approvedBy })
+            });
+
+            const resultDiv = document.getElementById('approveLoanResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan approved successfully!<br>
+                        <strong>Loan:</strong> ${data.loanReference}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Approval Date:</strong> ${data.approvalDate}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Approval failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('approveLoanResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Reject Loan
+    async function rejectLoan() {
+        const loanId = document.getElementById('rejectLoanId').value;
+        const rejectedBy = document.getElementById('rejectedBy').value;
+        if (!loanId || !rejectedBy) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}/reject`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ approvedBy: rejectedBy })
+            });
+
+            const resultDiv = document.getElementById('rejectLoanResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan rejected successfully!<br>
+                        <strong>Loan:</strong> ${data.loanReference}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Rejection failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('rejectLoanResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Disburse Loan
+    async function disburseLoan() {
+        const loanId = document.getElementById('disburseLoanId').value;
+        const disbursedBy = document.getElementById('disbursedBy').value;
+        if (!loanId || !disbursedBy) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}/disburse`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ approvedBy: disbursedBy })
+            });
+
+            const resultDiv = document.getElementById('disburseLoanResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan disbursed successfully!<br>
+                        <strong>Loan:</strong> ${data.loanReference}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Disbursement Date:</strong> ${data.disbursementDate}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Disbursement failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('disburseLoanResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Process Loan Payment
+    async function processLoanPayment() {
+        const loanId = document.getElementById('loanPaymentId').value;
+        const paymentAmount = document.getElementById('loanPaymentAmount').value;
+        const transactionId = document.getElementById('loanTransactionId').value;
+        if (!loanId || !paymentAmount) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}/payment`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    paymentAmount: parseFloat(paymentAmount),
+                    transactionId: transactionId ? parseInt(transactionId) : null
+                })
+            });
+
+            const resultDiv = document.getElementById('processLoanPaymentResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Payment processed successfully!<br>
+                        <strong>Loan:</strong> ${data.loanReference}<br>
+                        <strong>New Balance:</strong> ${data.currency} ${data.currentBalance}<br>
+                        <strong>Total Paid:</strong> ${data.currency} ${data.totalPaidAmount}<br>
+                        <strong>Payments Made:</strong> ${data.paymentsMade}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Payment failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('processLoanPaymentResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Update Loan Status
+    async function updateLoanStatus() {
+        const loanId = document.getElementById('updateLoanStatusId').value;
+        const status = document.getElementById('updateLoanStatusValue').value;
+        if (!loanId || !status) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}/status`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status: status })
+            });
+
+            const resultDiv = document.getElementById('updateLoanStatusResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan status updated successfully!<br>
+                        <strong>Loan:</strong> ${data.loanReference}<br>
+                        <strong>New Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Status update failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('updateLoanStatusResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Mark Delinquent
+    async function markDelinquent() {
+        const loanId = document.getElementById('delinquentLoanId').value;
+        const days = document.getElementById('daysDelinquent').value;
+        if (!loanId || !days) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}/delinquent`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ daysDelinquent: parseInt(days) })
+            });
+
+            const resultDiv = document.getElementById('markDelinquentResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result warning">
+                        ⚠️ Loan marked as delinquent!<br>
+                        <strong>Loan:</strong> ${data.loanReference}<br>
+                        <strong>Days Delinquent:</strong> ${data.daysDelinquent}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Delinquency update failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('markDelinquentResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Delete Loan
+    async function deleteLoan() {
+        const loanId = document.getElementById('deleteLoanId').value;
+        if (!loanId) return;
+
+        try {
+            const response = await fetch(`${LOAN_BASE_URL}/${loanId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('deleteLoanResult');
+
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Loan deleted successfully!<br>
+                        <strong>Loan ID:</strong> ${loanId}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Deletion failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('deleteLoanResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // ===== REPORT TESTING FUNCTIONS =====
+    const REPORT_BASE_URL = 'http://localhost:8080/api/reports';
+
+    // Request Report
+    async function requestReport() {
+        const reportData = {
+            userId: parseInt(document.getElementById('requestReportUserId').value),
+            reportType: document.getElementById('requestReportType').value,
+            title: document.getElementById('requestReportTitle').value,
+            format: document.getElementById('requestReportFormat').value,
+            startDate: document.getElementById('requestReportStartDate').value || null,
+            endDate: document.getElementById('requestReportEndDate').value || null,
+            description: document.getElementById('requestReportDescription').value,
+            parameters: document.getElementById('requestReportParameters').value
+        };
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(reportData)
+            });
+
+            const resultDiv = document.getElementById('requestReportResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Report requested successfully!<br>
+                        <strong>Report ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.reportReference}<br>
+                        <strong>Type:</strong> ${data.reportType}<br>
+                        <strong>Format:</strong> ${data.format}<br>
+                        <strong>Title:</strong> ${data.title}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Requested:</strong> ${data.requestedAt}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Report request failed: ${errorText}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('requestReportResult').innerHTML =
+                `<div class="result error">❌ Network error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Report by ID
+    async function getReportById() {
+        const reportId = document.getElementById('getReportId').value;
+        if (!reportId) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getReportByIdResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Report found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.reportReference}<br>
+                        <strong>Type:</strong> ${data.reportType}<br>
+                        <strong>Title:</strong> ${data.title}<br>
+                        <strong>Format:</strong> ${data.format}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>User ID:</strong> ${data.requestedBy.id}<br>
+                        <strong>Records:</strong> ${data.recordCount || 'N/A'}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Report not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getReportByIdResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Report by Reference
+    async function getReportByReference() {
+        const reportRef = document.getElementById('getReportRef').value;
+        if (!reportRef) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/reference/${encodeURIComponent(reportRef)}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getReportByRefResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Report found!<br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Reference:</strong> ${data.reportReference}<br>
+                        <strong>Type:</strong> ${data.reportType}<br>
+                        <strong>Title:</strong> ${data.title}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Report not found</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getReportByRefResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get User's Reports
+    async function getUserReports() {
+        const userId = document.getElementById('getUserReportsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/user/${userId}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getUserReportsResult');
+
+            if (response.ok) {
+                const reports = await response.json();
+                if (reports.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No reports found for user ${userId}</div>`;
+                } else {
+                    let reportsHtml = `<div class="result success">✅ Found ${reports.length} report(s):<br>`;
+                    reports.slice(0, 5).forEach(report => {
+                        reportsHtml += `<strong>${report.reportReference}</strong> - ${report.reportType} [${report.status}] ${report.title}<br>`;
+                    });
+                    if (reports.length > 5) {
+                        reportsHtml += `... and ${reports.length - 5} more<br>`;
+                    }
+                    reportsHtml += '</div>';
+                    resultDiv.innerHTML = reportsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching reports</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getUserReportsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Recent Reports
+    async function getRecentReports() {
+        const userId = document.getElementById('getRecentReportsId').value;
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/user/${userId}/recent`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getRecentReportsResult');
+
+            if (response.ok) {
+                const reports = await response.json();
+                if (reports.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No recent reports for user ${userId}</div>`;
+                } else {
+                    let reportsHtml = `<div class="result info">ℹ️ Found ${reports.length} recent report(s):<br>`;
+                    reports.forEach(report => {
+                        reportsHtml += `<strong>${report.reportReference}</strong> - ${report.title} [${report.status}]<br>`;
+                    });
+                    reportsHtml += '</div>';
+                    resultDiv.innerHTML = reportsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching recent reports</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getRecentReportsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Reports by Status
+    async function getReportsByStatus() {
+        const status = document.getElementById('getReportsByStatusValue').value;
+        if (!status) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/status/${status}`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getReportsByStatusResult');
+
+            if (response.ok) {
+                const reports = await response.json();
+                if (reports.length === 0) {
+                    resultDiv.innerHTML = `<div class="result info">ℹ️ No reports found with status ${status}</div>`;
+                } else {
+                    let reportsHtml = `<div class="result success">✅ Found ${reports.length} ${status} report(s):<br>`;
+                    reports.slice(0, 5).forEach(report => {
+                        reportsHtml += `<strong>${report.reportReference}</strong> - ${report.reportType} ${report.title}<br>`;
+                    });
+                    if (reports.length > 5) {
+                        reportsHtml += `... and ${reports.length - 5} more<br>`;
+                    }
+                    reportsHtml += '</div>';
+                    resultDiv.innerHTML = reportsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching reports by status</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getReportsByStatusResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Get Pending Reports
+    async function getPendingReports() {
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/pending`, {
+                headers: getAuthHeaders()
+            });
+            const resultDiv = document.getElementById('getPendingReportsResult');
+
+            if (response.ok) {
+                const reports = await response.json();
+                if (reports.length === 0) {
+                    resultDiv.innerHTML = `<div class="result success">✅ No pending reports found</div>`;
+                } else {
+                    let reportsHtml = `<div class="result warning">⚠️ Found ${reports.length} pending report(s):<br>`;
+                    reports.forEach(report => {
+                        reportsHtml += `<strong>${report.reportReference}</strong> - ${report.title} (requested ${report.requestedAt})<br>`;
+                    });
+                    reportsHtml += '</div>';
+                    resultDiv.innerHTML = reportsHtml;
+                }
+            } else {
+                resultDiv.innerHTML = `<div class="result error">❌ Error fetching pending reports</div>`;
+            }
+        } catch (error) {
+            document.getElementById('getPendingReportsResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Start Report Generation
+    async function startReportGeneration() {
+        const reportId = document.getElementById('startReportId').value;
+        const generatedBy = document.getElementById('generatedBy').value;
+        if (!reportId || !generatedBy) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}/start`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ generatedBy: generatedBy })
+            });
+
+            const resultDiv = document.getElementById('startReportResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Report generation started!<br>
+                        <strong>Report:</strong> ${data.reportReference}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Started:</strong> ${data.startedAt}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Start failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('startReportResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Complete Report Generation
+    async function completeReportGeneration() {
+        const reportId = document.getElementById('completeReportId').value;
+        const filePath = document.getElementById('reportFilePath').value;
+        const fileName = document.getElementById('reportFileName').value;
+        const fileSize = document.getElementById('reportFileSize').value;
+        const contentType = document.getElementById('reportContentType').value;
+        const recordCount = document.getElementById('reportRecordCount').value;
+
+        if (!reportId || !filePath || !fileName) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}/complete`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    filePath: filePath,
+                    fileName: fileName,
+                    fileSizeBytes: fileSize ? parseInt(fileSize) : null,
+                    contentType: contentType,
+                    recordCount: recordCount ? parseInt(recordCount) : null
+                })
+            });
+
+            const resultDiv = document.getElementById('completeReportResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Report generation completed!<br>
+                        <strong>Report:</strong> ${data.reportReference}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>File:</strong> ${data.fileName}<br>
+                        <strong>Size:</strong> ${data.fileSizeBytes} bytes<br>
+                        <strong>Records:</strong> ${data.recordCount}<br>
+                        <strong>Completed:</strong> ${data.completedAt}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Completion failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('completeReportResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Fail Report Generation
+    async function failReportGeneration() {
+        const reportId = document.getElementById('failReportId').value;
+        const errorMessage = document.getElementById('reportErrorMessage').value;
+        if (!reportId || !errorMessage) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}/fail`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ errorMessage: errorMessage })
+            });
+
+            const resultDiv = document.getElementById('failReportResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Report marked as failed!<br>
+                        <strong>Report:</strong> ${data.reportReference}<br>
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Error:</strong> ${data.errorMessage}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Fail operation failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('failReportResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Cancel Report
+    async function cancelReport() {
+        const reportId = document.getElementById('cancelReportId').value;
+        const cancelledBy = document.getElementById('cancelledBy').value;
+        if (!reportId || !cancelledBy) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}/cancel`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ cancelledBy: cancelledBy })
+            });
+
+            const resultDiv = document.getElementById('cancelReportResult');
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result warning">
+                        ⚠️ Report cancelled successfully!<br>
+                        <strong>Report:</strong> ${data.reportReference}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Cancellation failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('cancelReportResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Log Report Download
+    async function logReportDownload() {
+        const reportId = document.getElementById('downloadReportId').value;
+        const downloadedBy = document.getElementById('downloadedBy').value;
+        if (!reportId || !downloadedBy) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}/download`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ downloadedBy: downloadedBy })
+            });
+
+            const resultDiv = document.getElementById('logDownloadResult');
+
+            if (response.ok) {
+                const data = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Download logged successfully!<br>
+                        <strong>Report ID:</strong> ${reportId}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Download logging failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('logDownloadResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Cleanup Expired Reports
+    async function cleanupExpiredReports() {
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/cleanup-expired`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('cleanupResult');
+
+            if (response.ok) {
+                const data = await response.text();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Cleanup completed!<br>
+                        ${data}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Cleanup failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('cleanupResult').innerHTML =
+                `<div class="result error">❌ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Delete Report
+    async function deleteReport() {
+        const reportId = document.getElementById('deleteReportId').value;
+        if (!reportId) return;
+
+        try {
+            const response = await fetch(`${REPORT_BASE_URL}/${reportId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const resultDiv = document.getElementById('deleteReportResult');
+
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Report deleted successfully!<br>
+                        <strong>Report ID:</strong> ${reportId}
+                    </div>
+                `;
+            } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = `<div class="result error">❌ Deletion failed: ${errorText}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('deleteReportResult').innerHTML =
                 `<div class="result error">❌ Error: ${error.message}</div>`;
         }
     }

@@ -1,0 +1,14 @@
+package com.example.bankingplatform.report;
+
+public enum ReportType {
+    ACCOUNT_SUMMARY,
+    TRANSACTION_HISTORY,
+    LOAN_PORTFOLIO,
+    BILLING_SUMMARY,
+    AUDIT_LOG,
+    FINANCIAL_STATEMENT,
+    USER_ACTIVITY,
+    DELINQUENCY_REPORT,
+    PAYMENT_COLLECTION,
+    REGULATORY_COMPLIANCE
+}
