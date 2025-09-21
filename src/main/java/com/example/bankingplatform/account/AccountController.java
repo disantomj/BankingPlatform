@@ -114,6 +114,17 @@ public class AccountController {
         }
     }
 
+    // Admin endpoint to get all accounts system-wide
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<Account>> getAllAccounts() {
+        try {
+            List<Account> accounts = accountService.findAllAccounts();
+            return ResponseEntity.ok(accounts);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     // Request DTOs
     public static class CreateAccountRequest {
         private Integer userId;

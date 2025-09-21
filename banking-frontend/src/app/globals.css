@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-neutral-200;
+  }
+
+  body {
+    @apply bg-neutral-50 text-dark font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-dark font-semibold;
+  }
+
+  h1 {
+    @apply text-4xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  h4 {
+    @apply text-xl;
+  }
+
+  h5 {
+    @apply text-lg;
+  }
+
+  h6 {
+    @apply text-base;
+  }
+}
+
+@layer components {
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-600 focus:ring-primary-500 shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-white hover:bg-secondary-600 focus:ring-secondary-500 shadow-sm hover:shadow-md;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary text-primary hover:bg-primary hover:text-white focus:ring-primary-500;
+  }
+
+  .btn-ghost {
+    @apply btn text-neutral-600 hover:bg-neutral-100 hover:text-dark focus:ring-neutral-500;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-md {
+    @apply px-4 py-2 text-base;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-lg;
+  }
+
+  /* Form inputs */
+  .input {
+    @apply w-full rounded-lg border border-neutral-300 px-4 py-2 text-dark placeholder-neutral-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-100;
+  }
+
+  .input-error {
+    @apply border-error focus:border-error focus:ring-red-100;
+  }
+
+  /* Cards */
+  .card {
+    @apply rounded-xl bg-white shadow-card border border-neutral-100 overflow-hidden;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  /* Banking specific components */
+  .balance-card {
+    @apply card bg-gradient-primary text-white;
+  }
+
+  .account-card {
+    @apply card-hover border-l-4 border-l-primary;
+  }
+
+  .transaction-item {
+    @apply flex items-center justify-between py-3 border-b border-neutral-100 last:border-b-0;
+  }
+}

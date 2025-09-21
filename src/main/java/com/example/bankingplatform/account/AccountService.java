@@ -161,6 +161,10 @@ public class AccountService {
         accountRepository.delete(account);
     }
 
+    public List<Account> findAllAccounts() {
+        return accountRepository.findAll();
+    }
+
     private String generateAccountNumber() {
         String accountNum;
         do {
