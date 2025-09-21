@@ -151,8 +151,12 @@ export default function TransactionsPage() {
                 <Link href="/dashboard" className="text-neutral-600 hover:text-primary">Dashboard</Link>
                 <Link href="/accounts" className="text-neutral-600 hover:text-primary">Accounts</Link>
                 <Link href="/transactions" className="text-primary font-medium">Transactions</Link>
+                <Link href="/billing" className="text-neutral-600 hover:text-primary">Billing</Link>
                 <Link href="/loans" className="text-neutral-600 hover:text-primary">Loans</Link>
                 <Link href="/reports" className="text-neutral-600 hover:text-primary">Reports</Link>
+                {user?.role === 'ADMIN' && (
+                  <Link href="/admin" className="text-red-600 hover:text-red-700 font-medium">Admin</Link>
+                )}
               </nav>
             </div>
             <div className="flex items-center space-x-4">

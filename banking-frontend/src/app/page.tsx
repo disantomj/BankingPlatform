@@ -1,7 +1,10 @@
+'use client';
+
 import { Button, Card, CardBody } from '@/components/ui';
 import Link from 'next/link';
 
 export default function Home() {
+
   return (
     <main className="min-h-screen bg-accent-200">
       {/* Header */}
@@ -49,54 +52,63 @@ export default function Home() {
       {/* Feature Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link href="/dashboard">
-            <Card variant="hover" className="h-full">
+          <div className="group cursor-pointer" onClick={() => window.location.href = '/register'}>
+            <Card className="h-full transition-all duration-300 group-hover:shadow-lg group-hover:border-primary group-hover:bg-primary-50">
               <CardBody>
-                <div className="text-primary mb-4">
+                <div className="text-primary mb-4 transition-transform duration-300 group-hover:scale-110">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-dark mb-2">Dashboard</h3>
-                <p className="text-neutral-600">
+                <p className="text-neutral-600 mb-3">
                   View your accounts, balances, and recent activity at a glance.
+                </p>
+                <p className="text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Sign up to access your dashboard →
                 </p>
               </CardBody>
             </Card>
-          </Link>
+          </div>
 
-          <Link href="/transactions">
-            <Card variant="hover" className="h-full">
+          <div className="group cursor-pointer" onClick={() => window.location.href = '/register'}>
+            <Card className="h-full transition-all duration-300 group-hover:shadow-lg group-hover:border-secondary group-hover:bg-secondary-50">
               <CardBody>
-                <div className="text-secondary mb-4">
+                <div className="text-secondary mb-4 transition-transform duration-300 group-hover:scale-110">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"/>
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-dark mb-2">Transfers</h3>
-                <p className="text-neutral-600">
+                <p className="text-neutral-600 mb-3">
                   Send money, pay bills, and manage your transaction history.
+                </p>
+                <p className="text-sm text-secondary font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Sign up to start transferring →
                 </p>
               </CardBody>
             </Card>
-          </Link>
+          </div>
 
-          <Link href="/accounts">
-            <Card variant="hover" className="h-full bg-accent-50 border-accent-200">
+          <div className="group cursor-pointer" onClick={() => window.location.href = '/register'}>
+            <Card className="h-full bg-accent-50 border-accent-200 transition-all duration-300 group-hover:shadow-lg group-hover:border-accent-500 group-hover:bg-accent-100">
               <CardBody>
-                <div className="text-accent-700 mb-4">
+                <div className="text-accent-700 mb-4 transition-transform duration-300 group-hover:scale-110">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
                     <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/>
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-dark mb-2">Accounts</h3>
-                <p className="text-neutral-600">
+                <p className="text-neutral-600 mb-3">
                   Manage multiple accounts including checking, savings, and more.
+                </p>
+                <p className="text-sm text-accent-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Sign up to open accounts →
                 </p>
               </CardBody>
             </Card>
-          </Link>
+          </div>
 
           <Link href="/support">
             <Card variant="hover" className="h-full">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -9,14 +9,33 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
   const { accounts, isLoading: accountsLoading, error: accountsError } = useAccounts(user?.id);
   const { transactions, isLoading: transactionsLoading, error: transactionsError } = useTransactions(undefined, user?.id);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = '/login';
+    }
+  }, [isAuthenticated, isLoading]);
 
   const handleLogout = () => {
     logout();
     window.location.href = '/';
   };
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-accent-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-neutral-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate total balance across all accounts
   const totalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
@@ -35,6 +54,7 @@ export default function DashboardPage() {
                 <Link href="/dashboard" className="text-primary font-medium">Dashboard</Link>
                 <Link href="/accounts" className="text-neutral-600 hover:text-primary">Accounts</Link>
                 <Link href="/transactions" className="text-neutral-600 hover:text-primary">Transactions</Link>
+                <Link href="/billing" className="text-neutral-600 hover:text-primary">Billing</Link>
                 <Link href="/loans" className="text-neutral-600 hover:text-primary">Loans</Link>
                 <Link href="/reports" className="text-neutral-600 hover:text-primary">Reports</Link>
                 {user?.role === 'ADMIN' && (

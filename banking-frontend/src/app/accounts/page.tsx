@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { Button, Card, CardBody } from '@/components/ui';
@@ -10,8 +10,15 @@ import { AccountType } from '@/types';
 import Link from 'next/link';
 
 export default function AccountsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
   const { accounts, isLoading: accountsLoading, error: accountsError, refetch: refetchAccounts } = useAccounts(user?.id);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = '/login';
+    }
+  }, [isAuthenticated, isLoading]);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -28,6 +35,18 @@ export default function AccountsPage() {
     logout();
     window.location.href = '/';
   };
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-accent-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-neutral-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +145,7 @@ export default function AccountsPage() {
                 <Link href="/dashboard" className="text-neutral-600 hover:text-primary">Dashboard</Link>
                 <Link href="/accounts" className="text-primary font-medium">Accounts</Link>
                 <Link href="/transactions" className="text-neutral-600 hover:text-primary">Transactions</Link>
+                <Link href="/billing" className="text-neutral-600 hover:text-primary">Billing</Link>
                 <Link href="/loans" className="text-neutral-600 hover:text-primary">Loans</Link>
                 <Link href="/reports" className="text-neutral-600 hover:text-primary">Reports</Link>
                 {user?.role === 'ADMIN' && (

@@ -296,6 +296,289 @@ class ApiClient {
   async healthCheck(): Promise<ApiResponse<{ status: string }>> {
     return this.request<{ status: string }>('/api/users/health');
   }
+
+  // Billing methods
+  async getBillings(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/billings/user/${userId}`);
+  }
+
+  async getUnpaidBillings(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/billings/user/${userId}/unpaid`);
+  }
+
+  async getOverdueBillings(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/api/billings/overdue');
+  }
+
+  async getBilling(id: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/billings/${id}`);
+  }
+
+  async createBilling(billingData: {
+    userId: number;
+    accountId?: number;
+    billingType: string;
+    amount: number;
+    description: string;
+    dueDate: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>('/api/billings', {
+      method: 'POST',
+      body: JSON.stringify(billingData),
+    });
+  }
+
+  async createSubscription(subscriptionData: {
+    userId: number;
+    accountId?: number;
+    amount: number;
+    description: string;
+    frequency: string;
+    startDate: string;
+    endDate?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>('/api/billings/subscription', {
+      method: 'POST',
+      body: JSON.stringify(subscriptionData),
+    });
+  }
+
+  async processBillingPayment(id: number, paymentData: {
+    paymentAmount: number;
+    transactionId?: number;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/billings/${id}/payment`, {
+      method: 'PUT',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async updateBillingStatus(id: number, status: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/billings/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async applyBillingDiscount(id: number, discountAmount: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/billings/${id}/discount`, {
+      method: 'PUT',
+      body: JSON.stringify({ discountAmount }),
+    });
+  }
+
+  async deleteBilling(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/billings/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Report methods
+  async requestReport(reportData: {
+    userId: number;
+    reportType: string;
+    title: string;
+    format: string;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+    parameters?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>('/api/reports', {
+      method: 'POST',
+      body: JSON.stringify(reportData),
+    });
+  }
+
+  async getReport(id: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/${id}`);
+  }
+
+  async getReportByReference(reference: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/reference/${reference}`);
+  }
+
+  async getReportsByUser(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/reports/user/${userId}`);
+  }
+
+  async getRecentReportsByUser(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/reports/user/${userId}/recent`);
+  }
+
+  async getReportsByStatus(status: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/reports/status/${status}`);
+  }
+
+  async getReportsByType(reportType: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/reports/type/${reportType}`);
+  }
+
+  async getReportsByFormat(format: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/reports/format/${format}`);
+  }
+
+  async getPendingReports(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/api/reports/pending');
+  }
+
+  async getExpiredReports(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/api/reports/expired');
+  }
+
+  async getStuckReports(minutesAgo: number = 30): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/reports/stuck?minutesAgo=${minutesAgo}`);
+  }
+
+  async startReportGeneration(id: number, generatedBy: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/${id}/start`, {
+      method: 'PUT',
+      body: JSON.stringify({ generatedBy }),
+    });
+  }
+
+  async completeReportGeneration(id: number, completionData: {
+    filePath: string;
+    fileName: string;
+    fileSizeBytes: number;
+    contentType: string;
+    recordCount: number;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/${id}/complete`, {
+      method: 'PUT',
+      body: JSON.stringify(completionData),
+    });
+  }
+
+  async failReportGeneration(id: number, errorMessage: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/${id}/fail`, {
+      method: 'PUT',
+      body: JSON.stringify({ errorMessage }),
+    });
+  }
+
+  async cancelReport(id: number, cancelledBy: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/${id}/cancel`, {
+      method: 'PUT',
+      body: JSON.stringify({ cancelledBy }),
+    });
+  }
+
+  async logReportDownload(id: number, downloadedBy: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/reports/${id}/download`, {
+      method: 'POST',
+      body: JSON.stringify({ downloadedBy }),
+    });
+  }
+
+  async cleanupExpiredReports(): Promise<ApiResponse<any>> {
+    return this.request<any>('/api/reports/cleanup-expired', {
+      method: 'POST',
+    });
+  }
+
+  async deleteReport(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/reports/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Loan methods
+  async getLoans(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/loans/user/${userId}`);
+  }
+
+  async getActiveLoans(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/loans/user/${userId}/active`);
+  }
+
+  async getLoan(id: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}`);
+  }
+
+  async getLoansByStatus(status: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/loans/status/${status}`);
+  }
+
+  async getLoansByType(loanType: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/loans/type/${loanType}`);
+  }
+
+  async getDelinquentLoans(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/api/loans/delinquent');
+  }
+
+  async getLoansMaturingSoon(days?: number): Promise<ApiResponse<any[]>> {
+    const params = days ? `?days=${days}` : '';
+    return this.request<any[]>(`/api/loans/maturing${params}`);
+  }
+
+  async createLoanApplication(loanData: {
+    userId: number;
+    disbursementAccountId?: number;
+    loanType: string;
+    principalAmount: number;
+    interestRate: number;
+    termMonths: number;
+    paymentFrequency: string;
+    purpose: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>('/api/loans', {
+      method: 'POST',
+      body: JSON.stringify(loanData),
+    });
+  }
+
+  async approveLoan(id: number, approvedBy: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ approvedBy }),
+    });
+  }
+
+  async rejectLoan(id: number, approvedBy: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ approvedBy }),
+    });
+  }
+
+  async disburseLoan(id: number, approvedBy: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}/disburse`, {
+      method: 'PUT',
+      body: JSON.stringify({ approvedBy }),
+    });
+  }
+
+  async processLoanPayment(id: number, paymentData: {
+    paymentAmount: number;
+    transactionId?: number;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}/payment`, {
+      method: 'PUT',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async updateLoanStatus(id: number, status: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async markLoanAsDelinquent(id: number, daysDelinquent: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${id}/delinquent`, {
+      method: 'PUT',
+      body: JSON.stringify({ daysDelinquent }),
+    });
+  }
+
+  async deleteLoan(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/loans/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Export singleton instance
