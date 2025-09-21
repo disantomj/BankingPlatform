@@ -31,3 +31,37 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Security - Environment Variables and Secrets ###
+.env
+.env.local
+.env.production
+.env.development
+*.key
+*.pem
+*.p12
+*.jks
+
+### Database ###
+*.db
+*.sqlite
+
+### Logs ###
+*.log
+logs/
+
+### OS Generated Files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Banking Platform Specific ###
+banking-frontend/.env*
+banking-frontend/.next/
+banking-frontend/node_modules/
+banking-frontend/out/
+banking-frontend/build/
