@@ -2,34 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBilling, Billing } from '@/hooks/useBilling';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api/client';
 import Link from 'next/link';
 
-interface Billing {
-  id: number;
-  user: any;
-  account?: any;
-  billingType: string;
-  status: string;
-  amount: number;
-  description: string;
-  dueDate: string;
-  paidDate?: string;
-  transactionId?: number;
-  reference: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function BillingPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
+  const { bills, paidBills, isLoading: isLoadingBills, error: billsError, refetch, payBill, createBill } = useBilling(user?.id);
   const [activeTab, setActiveTab] = useState<'bills' | 'payments' | 'schedule'>('bills');
-  const [bills, setBills] = useState<Billing[]>([]);
-  const [paidBills, setPaidBills] = useState<Billing[]>([]);
-  const [isLoadingBills, setIsLoadingBills] = useState(false);
-  const [billsError, setBillsError] = useState('');
   const [showPayBillForm, setShowPayBillForm] = useState(false);
   const [showCreateBillForm, setShowCreateBillForm] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Billing | null>(null);
@@ -51,42 +33,6 @@ export default function BillingPage() {
     }
   }, [isAuthenticated, isLoading]);
 
-  // Load bills when user is authenticated
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      loadBills();
-    }
-  }, [isAuthenticated, user?.id]);
-
-  const loadBills = async () => {
-    if (!user?.id) return;
-
-    setIsLoadingBills(true);
-    setBillsError('');
-
-    try {
-      // Load all bills and separate by status
-      const [allBillsResponse, unpaidBillsResponse] = await Promise.all([
-        apiClient.getBillings(user.id),
-        apiClient.getUnpaidBillings(user.id)
-      ]);
-
-      if (allBillsResponse.success && allBillsResponse.data) {
-        const allBills = allBillsResponse.data;
-        const unpaidBills = unpaidBillsResponse.success ? unpaidBillsResponse.data : [];
-
-        setBills(unpaidBills || []);
-        setPaidBills(allBills.filter((bill: Billing) => bill.status === 'PAID') || []);
-      } else {
-        setBillsError(allBillsResponse.error || 'Failed to load bills');
-      }
-    } catch (error) {
-      setBillsError('An error occurred while loading bills');
-      console.error('Error loading bills:', error);
-    } finally {
-      setIsLoadingBills(false);
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -110,7 +56,7 @@ export default function BillingPage() {
         setSuccessMessage('Payment processed successfully!');
         setShowPayBillForm(false);
         setSelectedBill(null);
-        loadBills(); // Reload bills
+        refetch(); // Reload bills
       } else {
         setErrorMessage(response.error || 'Payment failed');
       }
@@ -124,31 +70,24 @@ export default function BillingPage() {
     e.preventDefault();
     if (!user?.id) return;
 
-    try {
-      const response = await apiClient.createBilling({
-        userId: user.id,
-        billingType: createBillForm.billingType,
-        amount: parseFloat(createBillForm.amount),
-        description: createBillForm.description,
-        dueDate: createBillForm.dueDate
-      });
+    const result = await createBill({
+      billingType: createBillForm.billingType,
+      amount: parseFloat(createBillForm.amount),
+      description: createBillForm.description,
+      dueDate: createBillForm.dueDate
+    });
 
-      if (response.success) {
-        setSuccessMessage('Bill created successfully!');
-        setShowCreateBillForm(false);
-        setCreateBillForm({
-          billingType: 'INVOICE',
-          amount: '',
-          description: '',
-          dueDate: ''
-        });
-        loadBills(); // Reload bills
-      } else {
-        setErrorMessage(response.error || 'Failed to create bill');
-      }
-    } catch (error) {
-      setErrorMessage('An error occurred while creating bill');
-      console.error('Error creating bill:', error);
+    if (result.success) {
+      setSuccessMessage('Bill created successfully!');
+      setShowCreateBillForm(false);
+      setCreateBillForm({
+        billingType: 'INVOICE',
+        amount: '',
+        description: '',
+        dueDate: ''
+      });
+    } else {
+      setErrorMessage(result.error || 'Failed to create bill');
     }
   };
 

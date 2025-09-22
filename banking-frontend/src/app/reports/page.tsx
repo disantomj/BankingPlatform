@@ -50,7 +50,7 @@ const reportFormats = ['PDF', 'CSV', 'EXCEL', 'JSON'];
 export default function ReportsPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [reportsLoading, setReportsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -64,6 +64,10 @@ export default function ReportsPage() {
     parameters: ''
   });
 
+  const [requestingReport, setRequestingReport] = useState(false);
+  const [cancellingReport, setCancellingReport] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       window.location.href = '/login';
@@ -75,14 +79,9 @@ export default function ReportsPage() {
     }
   }, [user, isAuthenticated, isLoading]);
 
-  useEffect(() => {
-    if (user) {
-      setLoading(false);
-    }
-  }, [user]);
-
   const loadReports = async (userId: number) => {
     try {
+      setReportsLoading(true);
       const response = await apiClient.getReportsByUser(userId);
       if (response.success && response.data) {
         setReports(response.data);
@@ -91,6 +90,27 @@ export default function ReportsPage() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load reports' });
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  const checkRateLimit = async (userId: number): Promise<boolean> => {
+    try {
+      const response = await apiClient.getReportsByUser(userId);
+      if (response.success && response.data) {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const recentReports = response.data.filter(report =>
+          new Date(report.requestDate) > oneWeekAgo
+        );
+
+        return recentReports.length === 0;
+      }
+      return true;
+    } catch (error) {
+      return true;
     }
   };
 
@@ -98,22 +118,36 @@ export default function ReportsPage() {
     e.preventDefault();
     if (!user) return;
 
-    try {
-      const reportData = {
-        userId: user.id,
-        reportType: newReport.reportType,
-        title: newReport.title,
-        format: newReport.format,
-        startDate: newReport.startDate || undefined,
-        endDate: newReport.endDate || undefined,
-        description: newReport.description || undefined,
-        parameters: newReport.parameters || undefined
-      };
+    const canRequest = await checkRateLimit(user.id);
+    if (!canRequest) {
+      setMessage({ type: 'error', text: 'You can only request one report per week. Please wait before requesting another report.' });
+      return;
+    }
 
+    const reportData = {
+      userId: user.id,
+      reportType: newReport.reportType,
+      title: newReport.title,
+      format: newReport.format,
+      startDate: newReport.startDate || undefined,
+      endDate: newReport.endDate || undefined,
+      description: newReport.description || undefined,
+      parameters: newReport.parameters || undefined
+    };
+
+    try {
+      setRequestingReport(true);
       const response = await apiClient.requestReport(reportData);
 
-      if (response.success) {
-        setMessage({ type: 'success', text: 'Report requested successfully!' });
+      if (response.success && response.data) {
+        setMessage({ type: 'success', text: 'Report auto-approved and generation started! Report will be completed by background process.' });
+
+        try {
+          await apiClient.startReportGeneration(response.data.id, user.username);
+        } catch (startError) {
+          setMessage({ type: 'error', text: 'Report requested but failed to auto-start generation. Check admin panel.' });
+        }
+
         setNewReport({
           reportType: '',
           title: '',
@@ -130,6 +164,8 @@ export default function ReportsPage() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to request report' });
+    } finally {
+      setRequestingReport(false);
     }
   };
 
@@ -137,6 +173,7 @@ export default function ReportsPage() {
     if (!user) return;
 
     try {
+      setCancellingReport(true);
       const response = await apiClient.cancelReport(reportId, user.username);
 
       if (response.success) {
@@ -147,6 +184,8 @@ export default function ReportsPage() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to cancel report' });
+    } finally {
+      setCancellingReport(false);
     }
   };
 
@@ -154,11 +193,19 @@ export default function ReportsPage() {
     if (!user) return;
 
     try {
-      await apiClient.logReportDownload(reportId, user.username);
-      setMessage({ type: 'success', text: 'Download logged successfully!' });
-      await loadReports(user.id);
+      setDownloadingReport(true);
+      const response = await apiClient.logReportDownload(reportId, user.username);
+
+      if (response.success) {
+        setMessage({ type: 'success', text: 'Download logged successfully!' });
+        await loadReports(user.id);
+      } else {
+        setMessage({ type: 'error', text: response.error || 'Failed to log download' });
+      }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to log download' });
+    } finally {
+      setDownloadingReport(false);
     }
   };
 
@@ -182,7 +229,7 @@ export default function ReportsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (isLoading || loading) {
+  if (isLoading || reportsLoading) {
     return (
       <div className="min-h-screen bg-accent-200 flex items-center justify-center">
         <div className="text-center">
@@ -345,7 +392,7 @@ export default function ReportsPage() {
             <h2 className="text-xl font-semibold text-dark">Your Reports</h2>
           </div>
 
-          {reports.length === 0 ? (
+          {!reports || reports.length === 0 ? (
             <CardBody>
               <div className="text-center text-neutral-600">
                 No reports found. Request your first report above!
@@ -367,7 +414,7 @@ export default function ReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-accent-200">
-                  {reports.map((report) => (
+                  {reports?.map((report) => (
                     <tr key={report.id} className="hover:bg-accent-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
                         {report.reference}

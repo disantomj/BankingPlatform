@@ -2,37 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLoans, getLoanTypeDisplay, getLoanStatusColor } from '@/hooks/useLoans';
+import { useAccounts } from '@/hooks/useAccounts';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { apiClient } from '@/lib/api/client';
 import Link from 'next/link';
 
-interface Loan {
-  id: number;
-  userId: number;
-  disbursementAccountId?: number;
-  loanType: string;
-  principalAmount: number;
-  currentBalance: number;
-  interestRate: number;
-  termMonths: number;
-  paymentFrequency: string;
-  monthlyPayment?: number;
-  nextPaymentDate?: string;
-  purpose: string;
-  status: string;
-  createdAt: string;
-  approvedAt?: string;
-  disbursedAt?: string;
-  approvedBy?: string;
-  daysDelinquent?: number;
-}
 
 export default function LoansPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
+  const { loans, isLoading: isLoadingLoans, error: loansError, applyForLoan } = useLoans(user?.id);
+  const { accounts } = useAccounts(user?.id);
   const [activeTab, setActiveTab] = useState<'overview' | 'apply'>('overview');
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [isLoadingLoans, setIsLoadingLoans] = useState(false);
   const [applicationForm, setApplicationForm] = useState({
     loanType: '',
     principalAmount: '',
@@ -42,7 +23,6 @@ export default function LoansPage() {
     purpose: '',
     disbursementAccountId: ''
   });
-  const [accounts, setAccounts] = useState<any[]>([]);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Redirect to login if not authenticated
@@ -52,116 +32,50 @@ export default function LoansPage() {
     }
   }, [isAuthenticated, isLoading]);
 
-  // Load loans and accounts when authenticated
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      loadLoans();
-      loadAccounts();
-    }
-  }, [isAuthenticated, user]);
-
-  const loadLoans = async () => {
-    if (!user?.id) return;
-
-    setIsLoadingLoans(true);
-    try {
-      const response = await apiClient.getLoans(user.id);
-      if (response.success) {
-        setLoans(response.data || []);
-      } else {
-        setMessage({ type: 'error', text: response.error || 'Failed to load loans' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to load loans' });
-    } finally {
-      setIsLoadingLoans(false);
-    }
-  };
-
-  const loadAccounts = async () => {
-    if (!user?.id) return;
-
-    try {
-      const response = await apiClient.getAccounts(user.id);
-      if (response.success) {
-        setAccounts(response.data || []);
-      }
-    } catch (error) {
-      console.error('Failed to load accounts:', error);
-    }
-  };
 
   const handleLogout = () => {
     logout();
     window.location.href = '/';
   };
 
-  const getLoanTypeDisplay = (type: string) => {
-    switch (type) {
-      case 'PERSONAL': return 'Personal Loan';
-      case 'AUTO': return 'Auto Loan';
-      case 'MORTGAGE': return 'Mortgage';
-      case 'STUDENT': return 'Student Loan';
-      case 'BUSINESS': return 'Business Loan';
-      default: return type;
-    }
-  };
-
-  const getLoanStatusColor = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'ACTIVE': case 'DISBURSED': return 'bg-green-100 text-green-800';
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'APPROVED': return 'bg-blue-100 text-blue-800';
-      case 'PAID_OFF': return 'bg-gray-100 text-gray-800';
-      case 'DELINQUENT': case 'DEFAULTED': return 'bg-red-100 text-red-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const handleApplicationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) return;
 
     setMessage(null);
-    try {
-      const loanData = {
-        userId: user.id,
-        disbursementAccountId: applicationForm.disbursementAccountId ? parseInt(applicationForm.disbursementAccountId) : undefined,
-        loanType: applicationForm.loanType,
-        principalAmount: parseFloat(applicationForm.principalAmount),
-        interestRate: parseFloat(applicationForm.interestRate),
-        termMonths: parseInt(applicationForm.termMonths),
-        paymentFrequency: applicationForm.paymentFrequency,
-        purpose: applicationForm.purpose
-      };
+    const loanData = {
+      disbursementAccountId: applicationForm.disbursementAccountId ? parseInt(applicationForm.disbursementAccountId) : undefined,
+      loanType: applicationForm.loanType,
+      principalAmount: parseFloat(applicationForm.principalAmount),
+      interestRate: parseFloat(applicationForm.interestRate) / 100, // Convert percentage to decimal
+      termMonths: parseInt(applicationForm.termMonths),
+      paymentFrequency: applicationForm.paymentFrequency,
+      purpose: applicationForm.purpose
+    };
 
-      const response = await apiClient.createLoanApplication(loanData);
+    const result = await applyForLoan(user.id, loanData);
 
-      if (response.success) {
-        setMessage({ type: 'success', text: 'Loan application submitted successfully!' });
-        setApplicationForm({
-          loanType: '',
-          principalAmount: '',
-          interestRate: '',
-          termMonths: '',
-          paymentFrequency: 'MONTHLY',
-          purpose: '',
-          disbursementAccountId: ''
-        });
-        loadLoans(); // Refresh the loans list
-        setActiveTab('overview');
-      } else {
-        setMessage({ type: 'error', text: response.error || 'Failed to submit loan application' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to submit loan application' });
+    if (result.success) {
+      setMessage({ type: 'success', text: 'Loan application submitted successfully!' });
+      setApplicationForm({
+        loanType: '',
+        principalAmount: '',
+        interestRate: '',
+        termMonths: '',
+        paymentFrequency: 'MONTHLY',
+        purpose: '',
+        disbursementAccountId: ''
+      });
+      setActiveTab('overview');
+    } else {
+      setMessage({ type: 'error', text: result.error || 'Failed to submit application' });
     }
   };
 
   const calculateMonthlyPayment = (principal: number, rate: number, termMonths: number): number => {
     if (rate === 0) return principal / termMonths;
-    const monthlyRate = rate / 100 / 12;
+    const monthlyRate = rate / 12; // rate is already a decimal (e.g., 0.055 for 5.5%)
     return (principal * monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
   };
 
@@ -296,14 +210,14 @@ export default function LoansPage() {
             </CardBody>
           </Card>
 
-          <Card className="border-l-4 border-l-accent-600">
+          <Card className="border-l-4 border-l-primary">
             <CardBody>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-neutral-600 text-sm font-medium">Active Loans</p>
                   <p className="text-2xl font-semibold text-dark">{loans.filter(l => ['ACTIVE', 'DISBURSED'].includes(l.status?.toUpperCase())).length}</p>
                 </div>
-                <div className="text-accent-600">
+                <div className="text-primary">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                   </svg>
@@ -394,7 +308,7 @@ export default function LoansPage() {
                         </div>
                         <div>
                           <p className="text-sm text-neutral-600">Interest Rate</p>
-                          <p className="font-semibold text-dark">{loan.interestRate}%</p>
+                          <p className="font-semibold text-dark">{(loan.interestRate * 100).toFixed(2)}%</p>
                         </div>
                         <div>
                           <p className="text-sm text-neutral-600">Term</p>
@@ -547,7 +461,7 @@ export default function LoansPage() {
                       <option value="">Select account (optional)</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.id}>
-                          {account.accountType} - {account.accountNumber} ({formatCurrency(account.balance)})
+                          {account.accountType} - {account.accountNum} ({formatCurrency(account.balance)})
                         </option>
                       ))}
                     </select>
@@ -589,7 +503,7 @@ export default function LoansPage() {
                           {formatCurrency(
                             calculateMonthlyPayment(
                               parseFloat(applicationForm.principalAmount),
-                              parseFloat(applicationForm.interestRate),
+                              parseFloat(applicationForm.interestRate) / 100, // Convert percentage to decimal for calculation
                               parseInt(applicationForm.termMonths)
                             )
                           )}

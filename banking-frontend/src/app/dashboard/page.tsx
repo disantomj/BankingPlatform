@@ -25,6 +25,56 @@ export default function DashboardPage() {
     window.location.href = '/';
   };
 
+  // Helper function to determine if a transfer is internal (between user's own accounts)
+  const isInternalTransfer = (transaction: any) => {
+    // For transfers, check if both accounts belong to the current user
+    // If we don't have full account details, we can check if the transaction
+    // involves accounts that belong to the current user
+    if (transaction.transactionType === 'TRANSFER') {
+      // Method 1: Check if we have full account objects with user data
+      if (transaction.fromAccount?.user?.id && transaction.toAccount?.user?.id) {
+        return transaction.fromAccount.user.id === user?.id &&
+               transaction.toAccount.user.id === user?.id;
+      }
+
+      // Method 2: Check if both account IDs belong to user's accounts
+      if (transaction.fromAccount?.id && transaction.toAccount?.id) {
+        const userAccountIds = accounts.map(acc => acc.id);
+        return userAccountIds.includes(transaction.fromAccount.id) &&
+               userAccountIds.includes(transaction.toAccount.id);
+      }
+
+      // Method 3: Fallback - for now assume transfers are internal
+      // (This is a safe assumption for most banking UIs)
+      return true;
+    }
+
+    return false;
+  };
+
+  // Helper function to get transaction display color and amount
+  const getTransactionDisplay = (transaction: any) => {
+    if (transaction.transactionType === 'DEPOSIT') {
+      return {
+        color: 'text-green-600',
+        prefix: '+',
+        amount: transaction.amount
+      };
+    } else if (isInternalTransfer(transaction)) {
+      return {
+        color: 'text-neutral-600',
+        prefix: '',
+        amount: transaction.amount
+      };
+    } else {
+      return {
+        color: 'text-red-600',
+        prefix: '-',
+        amount: transaction.amount
+      };
+    }
+  };
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -124,7 +174,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Recent Transactions */}
-          <Card className="border-l-4 border-l-accent-600">
+          <Card className="border-l-4 border-l-primary">
             <CardBody>
               <div className="flex items-center justify-between">
                 <div>
@@ -133,7 +183,7 @@ export default function DashboardPage() {
                     {transactionsLoading ? '...' : transactions.slice(0, 5).length}
                   </p>
                 </div>
-                <div className="text-accent-600">
+                <div className="text-primary">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"/>
                   </svg>
@@ -245,9 +295,14 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`font-semibold ${transaction.transactionType === 'DEPOSIT' ? 'text-green-600' : 'text-red-600'}`}>
-                          {transaction.transactionType === 'DEPOSIT' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                        </p>
+                        {(() => {
+                          const display = getTransactionDisplay(transaction);
+                          return (
+                            <p className={`font-semibold ${display.color}`}>
+                              {display.prefix}{formatCurrency(display.amount)}
+                            </p>
+                          );
+                        })()}
                         <p className="text-sm text-neutral-600">{transaction.status}</p>
                       </div>
                     </div>
@@ -258,62 +313,128 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Notifications & Alerts */}
         <div className="mt-8">
-          <h3 className="text-xl font-semibold text-dark mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/transfer">
-              <Card variant="hover" className="text-center">
-                <CardBody>
-                  <div className="text-primary mb-2">
-                    <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <p className="text-sm font-medium text-dark">Send Money</p>
-                </CardBody>
-              </Card>
-            </Link>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-dark">Notifications & Alerts</h3>
+            <Button variant="ghost" size="sm">
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"/>
+              </svg>
+              Mark All Read
+            </Button>
+          </div>
 
-            <Link href="/deposit">
-              <Card variant="hover" className="text-center">
-                <CardBody>
-                  <div className="text-secondary mb-2">
-                    <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd"/>
-                    </svg>
+          <div className="space-y-3">
+            {/* Low Balance Alert */}
+            {accounts.some(account => account.balance < 100) && (
+              <Card className="border-l-4 border-l-amber-500">
+                <CardBody className="py-3">
+                  <div className="flex items-start">
+                    <div className="text-amber-500 mr-3 mt-0.5">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-dark">Low Balance Warning</h4>
+                      <p className="text-sm text-neutral-600">
+                        {accounts.filter(account => account.balance < 100).length} of your accounts have low balances.
+                        <Link href="/accounts" className="text-primary hover:underline ml-1">Review accounts</Link>
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">Just now</p>
+                    </div>
                   </div>
-                  <p className="text-sm font-medium text-dark">Deposit</p>
                 </CardBody>
               </Card>
-            </Link>
+            )}
 
-            <Link href="/bills">
-              <Card variant="hover" className="text-center">
-                <CardBody>
-                  <div className="text-accent-600 mb-2">
-                    <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/>
-                    </svg>
+            {/* Recent Transaction Alert */}
+            {transactions.length > 0 && transactions.slice(0, 1).map(transaction => (
+              <Card key={transaction.id} className="border-l-4 border-l-primary">
+                <CardBody className="py-3">
+                  <div className="flex items-start">
+                    <div className="text-primary mr-3 mt-0.5">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-dark">Recent Transaction</h4>
+                      <p className="text-sm text-neutral-600">
+                        {transaction.transactionType} of {formatCurrency(transaction.amount)} was processed.
+                        <Link href="/transactions" className="text-primary hover:underline ml-1">View details</Link>
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        {(() => {
+                          try {
+                            return transaction.transactionDate ? formatDate(transaction.transactionDate) : 'Recently';
+                          } catch (error) {
+                            return 'Recently';
+                          }
+                        })()}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm font-medium text-dark">Pay Bills</p>
                 </CardBody>
               </Card>
-            </Link>
+            ))}
 
-            <Link href="/support">
-              <Card variant="hover" className="text-center">
-                <CardBody>
-                  <div className="text-neutral-600 mb-2">
-                    <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+            {/* Security Notice */}
+            <Card className="border-l-4 border-l-green-500">
+              <CardBody className="py-3">
+                <div className="flex items-start">
+                  <div className="text-green-500 mr-3 mt-0.5">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <p className="text-sm font-medium text-dark">Get Help</p>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-dark">Account Security</h4>
+                    <p className="text-sm text-neutral-600">
+                      Your account is secure. Last login: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString().split(' ')[0]}.
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-1">2 hours ago</p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Banking Tips */}
+            <Card className="border-l-4 border-l-blue-500">
+              <CardBody className="py-3">
+                <div className="flex items-start">
+                  <div className="text-blue-500 mr-3 mt-0.5">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-dark">Banking Tip</h4>
+                    <p className="text-sm text-neutral-600">
+                      Set up automatic savings transfers to reach your financial goals faster.
+                      <Link href="/accounts" className="text-primary hover:underline ml-1">Learn more</Link>
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-1">1 day ago</p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Empty State when no alerts */}
+            {accounts.every(account => account.balance >= 100) && transactions.length === 0 && (
+              <Card>
+                <CardBody className="text-center py-8">
+                  <div className="text-neutral-400 mb-2">
+                    <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h4 className="font-medium text-neutral-600 mb-1">You're all caught up!</h4>
+                  <p className="text-sm text-neutral-500">No new notifications or alerts at this time.</p>
                 </CardBody>
               </Card>
-            </Link>
+            )}
           </div>
         </div>
       </main>

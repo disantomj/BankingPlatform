@@ -15,9 +15,11 @@ export default function TransactionsPage() {
   const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useTransactions(undefined, user?.id);
 
   const [activeTab, setActiveTab] = useState<'history' | 'transfer' | 'deposit' | 'withdraw'>('history');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [withdrawalLoading, setWithdrawalLoading] = useState(false);
 
   // Form states
   const [transferForm, setTransferForm] = useState({
@@ -54,7 +56,7 @@ export default function TransactionsPage() {
     if (!user?.id) return;
 
     clearMessages();
-    setIsSubmitting(true);
+    setTransferLoading(true);
 
     try {
       const response = await apiClient.createTransfer({
@@ -75,7 +77,7 @@ export default function TransactionsPage() {
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred' });
     } finally {
-      setIsSubmitting(false);
+      setTransferLoading(false);
     }
   };
 
@@ -84,7 +86,7 @@ export default function TransactionsPage() {
     if (!user?.id) return;
 
     clearMessages();
-    setIsSubmitting(true);
+    setDepositLoading(true);
 
     try {
       const response = await apiClient.createDeposit({
@@ -104,7 +106,7 @@ export default function TransactionsPage() {
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred' });
     } finally {
-      setIsSubmitting(false);
+      setDepositLoading(false);
     }
   };
 
@@ -113,7 +115,7 @@ export default function TransactionsPage() {
     if (!user?.id) return;
 
     clearMessages();
-    setIsSubmitting(true);
+    setWithdrawalLoading(true);
 
     try {
       const response = await apiClient.createWithdrawal({
@@ -133,7 +135,7 @@ export default function TransactionsPage() {
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred' });
     } finally {
-      setIsSubmitting(false);
+      setWithdrawalLoading(false);
     }
   };
 
@@ -303,7 +305,7 @@ export default function TransactionsPage() {
                       onChange={(e) => setTransferForm(prev => ({ ...prev, fromAccountId: e.target.value }))}
                       className="input"
                       required
-                      disabled={isSubmitting}
+                      disabled={transferLoading}
                     >
                       <option value="">Select account</option>
                       {accounts.map((account) => (
@@ -321,7 +323,7 @@ export default function TransactionsPage() {
                       onChange={(e) => setTransferForm(prev => ({ ...prev, toAccountId: e.target.value }))}
                       className="input"
                       required
-                      disabled={isSubmitting}
+                      disabled={transferLoading}
                     >
                       <option value="">Select account</option>
                       {accounts.map((account) => (
@@ -342,7 +344,7 @@ export default function TransactionsPage() {
                   onChange={(e) => setTransferForm(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="0.00"
                   required
-                  disabled={isSubmitting}
+                  disabled={withdrawalLoading}
                 />
 
                 <Input
@@ -350,7 +352,7 @@ export default function TransactionsPage() {
                   value={transferForm.description}
                   onChange={(e) => setTransferForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="What's this transfer for?"
-                  disabled={isSubmitting}
+                  disabled={withdrawalLoading}
                 />
 
                 <Button
@@ -358,9 +360,9 @@ export default function TransactionsPage() {
                   variant="primary"
                   size="lg"
                   className="w-full"
-                  disabled={isSubmitting || accountsLoading}
+                  disabled={transferLoading || accountsLoading}
                 >
-                  {isSubmitting ? 'Processing Transfer...' : 'Transfer Money'}
+                  {transferLoading ? 'Processing Transfer...' : 'Transfer Money'}
                 </Button>
               </form>
             </CardBody>
@@ -379,7 +381,7 @@ export default function TransactionsPage() {
                     onChange={(e) => setDepositForm(prev => ({ ...prev, toAccountId: e.target.value }))}
                     className="input"
                     required
-                    disabled={isSubmitting}
+                    disabled={depositLoading}
                   >
                     <option value="">Select account</option>
                     {accounts.map((account) => (
@@ -399,7 +401,7 @@ export default function TransactionsPage() {
                   onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="0.00"
                   required
-                  disabled={isSubmitting}
+                  disabled={withdrawalLoading}
                 />
 
                 <Input
@@ -407,7 +409,7 @@ export default function TransactionsPage() {
                   value={depositForm.description}
                   onChange={(e) => setDepositForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="What's this deposit for?"
-                  disabled={isSubmitting}
+                  disabled={withdrawalLoading}
                 />
 
                 <Button
@@ -415,9 +417,9 @@ export default function TransactionsPage() {
                   variant="primary"
                   size="lg"
                   className="w-full"
-                  disabled={isSubmitting || accountsLoading}
+                  disabled={depositLoading || accountsLoading}
                 >
-                  {isSubmitting ? 'Processing Deposit...' : 'Deposit Money'}
+                  {depositLoading ? 'Processing Deposit...' : 'Deposit Money'}
                 </Button>
               </form>
             </CardBody>
@@ -436,7 +438,7 @@ export default function TransactionsPage() {
                     onChange={(e) => setWithdrawForm(prev => ({ ...prev, fromAccountId: e.target.value }))}
                     className="input"
                     required
-                    disabled={isSubmitting}
+                    disabled={depositLoading}
                   >
                     <option value="">Select account</option>
                     {accounts.map((account) => (
@@ -456,7 +458,7 @@ export default function TransactionsPage() {
                   onChange={(e) => setWithdrawForm(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="0.00"
                   required
-                  disabled={isSubmitting}
+                  disabled={withdrawalLoading}
                 />
 
                 <Input
@@ -464,7 +466,7 @@ export default function TransactionsPage() {
                   value={withdrawForm.description}
                   onChange={(e) => setWithdrawForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="What's this withdrawal for?"
-                  disabled={isSubmitting}
+                  disabled={withdrawalLoading}
                 />
 
                 <Button
@@ -472,9 +474,9 @@ export default function TransactionsPage() {
                   variant="primary"
                   size="lg"
                   className="w-full"
-                  disabled={isSubmitting || accountsLoading}
+                  disabled={withdrawalLoading || accountsLoading}
                 >
-                  {isSubmitting ? 'Processing Withdrawal...' : 'Withdraw Money'}
+                  {withdrawalLoading ? 'Processing Withdrawal...' : 'Withdraw Money'}
                 </Button>
               </form>
             </CardBody>

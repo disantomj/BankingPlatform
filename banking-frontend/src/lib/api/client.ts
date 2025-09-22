@@ -36,12 +36,23 @@ class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+
+      try {
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          data = await response.text();
+        }
+      } catch (parseError) {
+        data = await response.text();
+      }
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || `HTTP error! status: ${response.status}`,
+          error: data.message || data || `HTTP error! status: ${response.status}`,
         };
       }
 
@@ -350,6 +361,35 @@ class ApiClient {
     return this.request<any>(`/api/billings/${id}/payment`, {
       method: 'PUT',
       body: JSON.stringify(paymentData),
+    });
+  }
+
+  async payBill(billId: number, accountId: number): Promise<ApiResponse<any>> {
+    // Get bill details to determine payment amount
+    const billResponse = await this.getBilling(billId);
+    if (!billResponse.success || !billResponse.data) {
+      return { success: false, error: 'Failed to get bill details' };
+    }
+
+    const bill = billResponse.data;
+
+    // First create a withdrawal transaction from the specified account
+    const withdrawalResponse = await this.createWithdrawal({
+      fromAccountId: accountId,
+      amount: bill.amount,
+      userId: bill.user.id, // Use the bill owner's user ID
+      description: `Payment for ${bill.description || bill.billingType}`,
+      channel: 'ONLINE_BANKING'
+    });
+
+    if (!withdrawalResponse.success || !withdrawalResponse.data) {
+      return { success: false, error: withdrawalResponse.error || 'Failed to create payment transaction' };
+    }
+
+    // Then process the billing payment with the transaction ID
+    return this.processBillingPayment(billId, {
+      paymentAmount: bill.amount,
+      transactionId: withdrawalResponse.data.id
     });
   }
 

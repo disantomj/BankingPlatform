@@ -149,14 +149,14 @@ public class BillingController {
     }
 
     @PutMapping("/{id}/payment")
-    public ResponseEntity<Billing> processPayment(
+    public ResponseEntity<?> processPayment(
             @PathVariable Long id,
             @RequestBody ProcessPaymentRequest request) {
         try {
             Billing billing = billingService.processPayment(id, request.getPaymentAmount(), request.getTransactionId());
             return ResponseEntity.ok(billing);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 

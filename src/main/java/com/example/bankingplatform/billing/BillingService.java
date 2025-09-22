@@ -85,7 +85,10 @@ public class BillingService {
             billing.setStatus(BillingStatus.PAID);
             billing.setPaidDate(LocalDate.now());
 
-            if (billing.getFrequency() != null && billing.getFrequency() != BillingFrequency.ONE_TIME) {
+            // Only generate next bill for recurring subscriptions
+            if (billing.getFrequency() != null &&
+                billing.getFrequency() != BillingFrequency.ONE_TIME &&
+                billing.getBillingType() == BillingType.SUBSCRIPTION) {
                 generateNextRecurringBill(billing);
             }
         }
@@ -224,6 +227,11 @@ public class BillingService {
 
     private void generateNextRecurringBill(Billing originalBilling) {
         LocalDate nextDueDate = originalBilling.getNextBillingDate();
+
+        // If nextBillingDate is null, calculate it from the current due date
+        if (nextDueDate == null) {
+            nextDueDate = calculateNextBillingDate(originalBilling.getDueDate(), originalBilling.getFrequency());
+        }
 
         if (originalBilling.getSubscriptionEndDate() != null &&
             nextDueDate.isAfter(originalBilling.getSubscriptionEndDate())) {

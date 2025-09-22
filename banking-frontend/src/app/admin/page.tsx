@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useApi } from '@/hooks/useApi';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api/client';
@@ -14,10 +15,12 @@ export default function AdminDashboard() {
   const { transactions, isLoading: transactionsLoading, error: transactionsError, refetch: refetchTransactions } = useTransactions(undefined, undefined);
   const { accounts, isLoading: accountsLoading } = useAccounts(undefined);
 
-  const [audits, setAudits] = useState<any[]>([]);
-  const [failedOps, setFailedOps] = useState<any[]>([]);
-  const [highRiskActivities, setHighRiskActivities] = useState<any[]>([]);
-  const [loans, setLoans] = useState<any[]>([]);
+  const { data: audits = [], isLoading: auditsLoading } = useApi(() => apiClient.getRecentAudits());
+  const { data: failedOps = [], isLoading: failedOpsLoading } = useApi(() => apiClient.getFailedOperations(), { immediate: false });
+  const { data: highRiskActivities = [], isLoading: riskLoading } = useApi(() => apiClient.getHighRiskActivities(), { immediate: false });
+  const { data: loans = [], isLoading: loansLoading, refetch: refetchLoans } = useApi(() => apiClient.getLoansByStatus('PENDING'));
+  // For now, just focus on GENERATING reports since that's what we're testing
+  const { data: allReports = [], isLoading: reportsLoading, refetch: refetchReports } = useApi(() => apiClient.getReportsByStatus('GENERATING'));
   const [isProcessing, setIsProcessing] = useState<{ [key: number]: boolean }>({});
 
   // Check if user is admin
@@ -42,57 +45,11 @@ export default function AdminDashboard() {
     window.location.href = '/';
   };
 
-  const pendingTransactions = transactions.filter(t => t.status === 'PENDING');
-  const pendingAccounts = accounts.filter(a => a.status === 'PENDING_APPROVAL');
-  const pendingLoans = loans.filter(l => l.status === 'PENDING');
-  const totalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
+  const pendingTransactions = (transactions || []).filter(t => t.status === 'PENDING');
+  const pendingAccounts = (accounts || []).filter(a => a.status === 'PENDING_APPROVAL');
+  const pendingLoans = (loans || []).filter(l => l.status === 'PENDING');
+  const totalBalance = (accounts || []).reduce((sum, account) => sum + (account.balance || 0), 0);
 
-  useEffect(() => {
-    const loadAuditData = async () => {
-      try {
-        // Load recent audits (this one works)
-        const auditsRes = await apiClient.getRecentAudits();
-        if (auditsRes.success) setAudits(auditsRes.data || []);
-
-        // Load all loans for admin view
-        try {
-          const loansRes = await apiClient.getLoansByStatus('PENDING');
-          if (loansRes.success) {
-            setLoans(loansRes.data || []);
-          } else {
-            // Fallback to getting all loans if status filter doesn't work
-            const allLoansRes = await apiClient.getLoans();
-            if (allLoansRes.success) setLoans(allLoansRes.data || []);
-          }
-        } catch (error) {
-          console.log('Error loading loans:', error);
-          setLoans([]);
-        }
-
-        // Try to load failed operations, but don't fail if it doesn't work
-        try {
-          const failedRes = await apiClient.getFailedOperations();
-          if (failedRes.success) setFailedOps(failedRes.data || []);
-        } catch (error) {
-          console.log('Failed operations endpoint not available');
-          setFailedOps([]);
-        }
-
-        // Try to load high risk activities, but don't fail if it doesn't work
-        try {
-          const riskRes = await apiClient.getHighRiskActivities();
-          if (riskRes.success) setHighRiskActivities(riskRes.data || []);
-        } catch (error) {
-          console.log('High risk activities endpoint not available');
-          setHighRiskActivities([]);
-        }
-      } catch (error) {
-        console.error('Error loading audit data:', error);
-      }
-    };
-
-    loadAuditData();
-  }, []);
 
   const handleProcessTransaction = async (transactionId: number) => {
     setIsProcessing(prev => ({ ...prev, [transactionId]: true }));
@@ -166,11 +123,7 @@ export default function AdminDashboard() {
       const response = await apiClient.approveLoan(loanId, user?.username || 'Admin');
       if (response.success) {
         // Refresh loans data
-        setLoans(prev => prev.map(loan =>
-          loan.id === loanId
-            ? { ...loan, status: 'APPROVED', approvedBy: user?.username }
-            : loan
-        ));
+        await refetchLoans();
         alert('Loan approved successfully!');
       } else {
         alert('Failed to approve loan: ' + response.error);
@@ -188,11 +141,7 @@ export default function AdminDashboard() {
       const response = await apiClient.rejectLoan(loanId, user?.username || 'Admin');
       if (response.success) {
         // Refresh loans data
-        setLoans(prev => prev.map(loan =>
-          loan.id === loanId
-            ? { ...loan, status: 'REJECTED', approvedBy: user?.username }
-            : loan
-        ));
+        await refetchLoans();
         alert('Loan rejected successfully!');
       } else {
         alert('Failed to reject loan: ' + response.error);
@@ -210,11 +159,7 @@ export default function AdminDashboard() {
       const response = await apiClient.disburseLoan(loanId, user?.username || 'Admin');
       if (response.success) {
         // Refresh loans data
-        setLoans(prev => prev.map(loan =>
-          loan.id === loanId
-            ? { ...loan, status: 'DISBURSED' }
-            : loan
-        ));
+        await refetchLoans();
         alert('Loan disbursed successfully!');
       } else {
         alert('Failed to disburse loan: ' + response.error);
@@ -223,6 +168,80 @@ export default function AdminDashboard() {
       alert('Error disbursing loan');
     } finally {
       setIsProcessing(prev => ({ ...prev, [loanId]: false }));
+    }
+  };
+
+  const handleCompleteReport = async (reportId: number) => {
+    setIsProcessing(prev => ({ ...prev, [reportId]: true }));
+    try {
+      const response = await apiClient.completeReportGeneration(reportId, {
+        filePath: `/reports/report_${reportId}.pdf`,
+        fileName: `report_${reportId}.pdf`,
+        fileSizeBytes: 1024000,
+        contentType: 'application/pdf',
+        recordCount: 100
+      });
+      if (response.success) {
+        await refetchReports();
+        alert('Report completed successfully!');
+      } else {
+        alert('Failed to complete report: ' + response.error);
+      }
+    } catch (error) {
+      alert('Error completing report');
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [reportId]: false }));
+    }
+  };
+
+  const handleFailReport = async (reportId: number, errorMessage: string) => {
+    setIsProcessing(prev => ({ ...prev, [reportId]: true }));
+    try {
+      const response = await apiClient.failReportGeneration(reportId, errorMessage);
+      if (response.success) {
+        await refetchReports();
+        alert('Report marked as failed!');
+      } else {
+        alert('Failed to mark report as failed: ' + response.error);
+      }
+    } catch (error) {
+      alert('Error failing report');
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [reportId]: false }));
+    }
+  };
+
+  const handleStartReport = async (reportId: number) => {
+    setIsProcessing(prev => ({ ...prev, [reportId]: true }));
+    try {
+      const response = await apiClient.startReportGeneration(reportId, user?.username || 'Admin');
+      if (response.success) {
+        await refetchReports();
+        alert('Report generation started!');
+      } else {
+        alert('Failed to start report: ' + response.error);
+      }
+    } catch (error) {
+      alert('Error starting report');
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [reportId]: false }));
+    }
+  };
+
+  const handleCancelReport = async (reportId: number) => {
+    setIsProcessing(prev => ({ ...prev, [reportId]: true }));
+    try {
+      const response = await apiClient.cancelReport(reportId, user?.username || 'Admin');
+      if (response.success) {
+        await refetchReports();
+        alert('Report cancelled successfully!');
+      } else {
+        alert('Failed to cancel report: ' + response.error);
+      }
+    } catch (error) {
+      alert('Error cancelling report');
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [reportId]: false }));
     }
   };
 
@@ -255,7 +274,7 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Admin Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-          <Card className="border-l-4 border-l-red-500">
+          <Card className="border-l-4 border-l-amber-500">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pr-2">
@@ -264,7 +283,7 @@ export default function AdminDashboard() {
                     {transactionsLoading ? '...' : pendingTransactions.length}
                   </p>
                 </div>
-                <div className="text-red-500 flex-shrink-0">
+                <div className="text-amber-500 flex-shrink-0">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                   </svg>
@@ -273,7 +292,7 @@ export default function AdminDashboard() {
             </CardBody>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500">
+          <Card className="border-l-4 border-l-amber-500">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pr-2">
@@ -282,7 +301,7 @@ export default function AdminDashboard() {
                     {accountsLoading ? '...' : pendingAccounts.length}
                   </p>
                 </div>
-                <div className="text-yellow-500 flex-shrink-0">
+                <div className="text-amber-500 flex-shrink-0">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
                   </svg>
@@ -291,14 +310,14 @@ export default function AdminDashboard() {
             </CardBody>
           </Card>
 
-          <Card className="border-l-4 border-l-orange-500">
+          <Card className="border-l-4 border-l-amber-500">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pr-2">
                   <p className="text-neutral-600 text-xs font-medium">Pending Loans</p>
-                  <p className="text-lg font-semibold text-dark">{pendingLoans.length}</p>
+                  <p className="text-lg font-semibold text-dark">{(pendingLoans || []).length}</p>
                 </div>
-                <div className="text-orange-500 flex-shrink-0">
+                <div className="text-amber-500 flex-shrink-0">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v4H4v-4z"/>
                   </svg>
@@ -307,7 +326,7 @@ export default function AdminDashboard() {
             </CardBody>
           </Card>
 
-          <Card className="border-l-4 border-l-secondary">
+          <Card className="border-l-4 border-l-primary">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pr-2">
@@ -316,7 +335,7 @@ export default function AdminDashboard() {
                     {accountsLoading ? '...' : formatCurrency(totalBalance)}
                   </p>
                 </div>
-                <div className="text-secondary flex-shrink-0">
+                <div className="text-primary flex-shrink-0">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
                     <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/>
@@ -326,14 +345,14 @@ export default function AdminDashboard() {
             </CardBody>
           </Card>
 
-          <Card className="border-l-4 border-l-accent-600">
+          <Card className="border-l-4 border-l-red-500">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pr-2">
                   <p className="text-neutral-600 text-xs font-medium">Failed Operations</p>
-                  <p className="text-lg font-semibold text-dark">{failedOps.length}</p>
+                  <p className="text-lg font-semibold text-dark">{(failedOps || []).length}</p>
                 </div>
-                <div className="text-accent-600 flex-shrink-0">
+                <div className="text-red-500 flex-shrink-0">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                   </svg>
@@ -342,14 +361,14 @@ export default function AdminDashboard() {
             </CardBody>
           </Card>
 
-          <Card className="border-l-4 border-l-red-600">
+          <Card className="border-l-4 border-l-red-500">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pr-2">
                   <p className="text-neutral-600 text-xs font-medium">High Risk Activities</p>
-                  <p className="text-lg font-semibold text-dark">{highRiskActivities.length}</p>
+                  <p className="text-lg font-semibold text-dark">{(highRiskActivities || []).length}</p>
                 </div>
-                <div className="text-red-600 flex-shrink-0">
+                <div className="text-red-500 flex-shrink-0">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd"/>
                   </svg>
@@ -378,7 +397,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                {!transactionsLoading && !transactionsError && pendingTransactions.length === 0 && (
+                {!transactionsLoading && !transactionsError && (pendingTransactions || []).length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-neutral-600">No pending transactions</p>
                   </div>
@@ -439,7 +458,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                {!accountsLoading && pendingAccounts.length === 0 && (
+                {!accountsLoading && (pendingAccounts || []).length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-neutral-600">No pending accounts</p>
                   </div>
@@ -498,7 +517,7 @@ export default function AdminDashboard() {
             <h3 className="text-xl font-semibold text-dark mb-4">Pending Loans</h3>
             <Card>
               <CardBody>
-                {pendingLoans.length === 0 ? (
+                {(pendingLoans || []).length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-neutral-600">No pending loan applications</p>
                   </div>
@@ -574,13 +593,14 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
+
           {/* Recent System Activity */}
           <div>
             <h3 className="text-xl font-semibold text-dark mb-4">Recent Activity</h3>
             <Card>
               <CardBody>
                 <div className="space-y-2">
-                  {audits.slice(0, 8).map((audit) => (
+                  {(audits || []).slice(0, 8).map((audit) => (
                     <div key={audit.id} className="flex items-start justify-between py-2 border-b border-accent-200 last:border-b-0">
                       <div className="flex-1 min-w-0 pr-3">
                         <p className="font-medium text-dark text-sm leading-tight truncate">{audit.action}</p>

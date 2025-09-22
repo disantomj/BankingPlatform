@@ -144,7 +144,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Dotenv for loading .env files -->
+        <!-- Dotenv for loading env files -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
