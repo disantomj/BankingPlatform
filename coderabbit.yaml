@@ -1,0 +1,11 @@
+# .coderabbit.yaml
+reviews:
+  auto: true       # automatically review new PRs
+  path_includes:   # optional: restrict reviews to these folders
+    - "src/"
+    - "tests/"
+  path_excludes:   # optional: ignore generated files, vendor code, etc.
+    - "node_modules/"
+    - "dist/"
+language: "en"     # language of feedback
+style: "concise"   # options: concise | detailed
