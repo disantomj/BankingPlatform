@@ -1,5 +1,7 @@
 package com.example.bankingplatform.transaction;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -43,4 +45,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     // Find recent transactions (using service to limit)
     List<Transaction> findTop10ByUserIdOrderByCreatedAtDesc(Integer userId);
+
+    // Find all transactions for an account (both from and to) - Spring Data will implement this
+    List<Transaction> findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(Integer fromAccountId, Integer toAccountId);
+
+    // Paginated versions for better performance
+    Page<Transaction> findByUserIdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
+    Page<Transaction> findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(Integer fromAccountId, Integer toAccountId, Pageable pageable);
+    Page<Transaction> findByStatusOrderByCreatedAtDesc(TransactionStatus status, Pageable pageable);
+    Page<Transaction> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 }

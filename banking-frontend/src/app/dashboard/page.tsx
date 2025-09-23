@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccounts } from '@/hooks/useAccounts';
-import { useTransactions } from '@/hooks/useTransactions';
+import { useAccounts } from '@/hooks/useAccountsQuery';
+import { useTransactions } from '@/hooks/useTransactionsQuery';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
-  const { accounts, isLoading: accountsLoading, error: accountsError } = useAccounts(user?.id);
-  const { transactions, isLoading: transactionsLoading, error: transactionsError } = useTransactions(undefined, user?.id);
+  const { data: accounts = [], isLoading: accountsLoading, error: accountsError } = useAccounts(user?.id);
+  const { data: transactions = [], isLoading: transactionsLoading, error: transactionsError } = useTransactions(undefined, user?.id);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -217,7 +217,7 @@ export default function DashboardPage() {
               {accountsError && (
                 <Card>
                   <CardBody className="text-center py-8">
-                    <p className="text-red-600">Error loading accounts: {accountsError}</p>
+                    <p className="text-red-600">Error loading accounts: {accountsError?.message || 'Unknown error'}</p>
                   </CardBody>
                 </Card>
               )}
@@ -281,7 +281,7 @@ export default function DashboardPage() {
 
                 {transactionsError && (
                   <div className="text-center py-8">
-                    <p className="text-red-600">Error loading transactions: {transactionsError}</p>
+                    <p className="text-red-600">Error loading transactions: {transactionsError?.message || 'Unknown error'}</p>
                   </div>
                 )}
 

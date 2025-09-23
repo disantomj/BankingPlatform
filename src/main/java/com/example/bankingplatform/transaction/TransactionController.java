@@ -6,6 +6,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -144,6 +147,24 @@ public class TransactionController {
     @GetMapping("/user/{userId}/recent")
     public ResponseEntity<List<Transaction>> getRecentUserTransactions(@PathVariable Integer userId) {
         List<Transaction> transactions = transactionService.getRecentUserTransactions(userId);
+        return ResponseEntity.ok(transactions);
+    }
+
+    // Get paginated transactions for a user
+    @GetMapping("/user/{userId}/paginated")
+    public ResponseEntity<Page<Transaction>> getUserTransactionsPaginated(
+            @PathVariable Integer userId,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        Page<Transaction> transactions = transactionService.getUserTransactionsPaginated(userId, pageable);
+        return ResponseEntity.ok(transactions);
+    }
+
+    // Get paginated transactions for an account
+    @GetMapping("/account/{accountId}/paginated")
+    public ResponseEntity<Page<Transaction>> getAccountTransactionsPaginated(
+            @PathVariable Integer accountId,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        Page<Transaction> transactions = transactionService.getAccountTransactionsPaginated(accountId, pageable);
         return ResponseEntity.ok(transactions);
     }
 

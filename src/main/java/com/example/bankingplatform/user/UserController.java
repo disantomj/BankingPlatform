@@ -3,14 +3,16 @@ package com.example.bankingplatform.user;
 import com.example.bankingplatform.user.dto.LoginRequest;
 import com.example.bankingplatform.user.dto.SignupRequest;
 import com.example.bankingplatform.user.dto.AuthResponse;
-import com.example.bankingplatform.user.exception.UserAlreadyExistsException;
-import com.example.bankingplatform.user.exception.InvalidCredentialsException;
+import com.example.bankingplatform.exception.UserAlreadyExistsException;
+import com.example.bankingplatform.exception.InvalidCredentialsException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/api/users")
 public class UserController {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -66,11 +69,28 @@ public class UserController {
     public ResponseEntity<?> getCurrentUserProfile() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            logger.debug("Profile request - Authentication object: {}", authentication);
+
+            if (authentication == null) {
+                logger.warn("Profile request failed - No authentication object in SecurityContext");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(createErrorResponse("Unauthorized", "No authentication found"));
+            }
+
             String username = authentication.getName();
+            logger.debug("Profile request for username: {}", username);
+
+            if (username == null || "anonymousUser".equals(username)) {
+                logger.warn("Profile request failed - Invalid username: {}", username);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(createErrorResponse("Unauthorized", "Invalid user authentication"));
+            }
 
             UserProfileResponse profile = userService.getUserProfile(username);
+            logger.debug("Profile retrieved successfully for user: {}", username);
             return ResponseEntity.ok(profile);
         } catch (Exception e) {
+            logger.error("Profile request failed with exception: ", e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(createErrorResponse("Profile not found", "User profile could not be retrieved"));
         }

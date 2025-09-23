@@ -64,7 +64,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(profileResponse.data);
           return { success: true };
         } else {
-          return { success: false, error: 'Failed to fetch user profile' };
+          console.log('Profile fetch failed:', profileResponse.error);
+          return { success: false, error: profileResponse.error || 'Failed to fetch user profile' };
         }
       } else {
         return { success: false, error: response.error || 'Login failed' };

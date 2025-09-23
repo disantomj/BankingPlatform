@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,6 +63,7 @@ public class AccountController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or authentication.name == @userRepository.findById(#userId).get().username")
     public ResponseEntity<List<Account>> getAccountsByUser(@PathVariable Integer userId) {
         User user = new User();
         user.setId(userId);
@@ -71,6 +73,7 @@ public class AccountController {
     }
 
     @GetMapping("/user/{userId}/active")
+    @PreAuthorize("hasRole('ADMIN') or authentication.name == @userRepository.findById(#userId).get().username")
     public ResponseEntity<List<Account>> getActiveAccountsByUser(@PathVariable Integer userId) {
         User user = new User();
         user.setId(userId);
@@ -119,6 +122,7 @@ public class AccountController {
 
     // Admin endpoint to get all accounts system-wide
     @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Account>> getAllAccounts() {
         try {
             List<Account> accounts = accountService.findAllAccounts();

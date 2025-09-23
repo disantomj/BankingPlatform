@@ -3,6 +3,7 @@ package com.example.bankingplatform.audit;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +49,7 @@ public class AuditController {
 
     // Get all recent audits
     @GetMapping("/recent")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Audit>> getRecentAudits() {
         List<Audit> audits = auditService.getRecentAudits();
         return ResponseEntity.ok(audits);
@@ -111,6 +113,7 @@ public class AuditController {
 
     // Security endpoints
     @GetMapping("/security/failed-operations")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Audit>> getFailedOperations(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
@@ -119,6 +122,7 @@ public class AuditController {
     }
 
     @GetMapping("/security/high-risk")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Audit>> getHighRiskActivities(
             @RequestParam(defaultValue = "70") Integer riskThreshold) {
         List<Audit> audits = auditService.getHighRiskActivities(riskThreshold);
@@ -126,6 +130,7 @@ public class AuditController {
     }
 
     @GetMapping("/security/critical-events")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Audit>> getCriticalSecurityEvents() {
         List<Audit> audits = auditService.getCriticalSecurityEvents();
         return ResponseEntity.ok(audits);

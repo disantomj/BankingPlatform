@@ -8,6 +8,8 @@ import com.example.bankingplatform.audit.AuditSeverity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -201,23 +203,28 @@ public class TransactionService {
         }
     }
 
-    // Get all transactions for an account (both incoming and outgoing)
+    // Get all transactions for an account (both incoming and outgoing) - optimized single query
     public List<Transaction> getAccountTransactions(Integer accountId) {
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.addAll(transactionRepository.findByFromAccountIdOrderByCreatedAtDesc(accountId));
-        transactions.addAll(transactionRepository.findByToAccountIdOrderByCreatedAtDesc(accountId));
-
-        // Remove duplicates and sort by creation date descending
-        return transactions.stream()
-            .distinct()
-            .sorted((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()))
-            .collect(Collectors.toList());
+        // Use single query instead of two separate queries + merge
+        return transactionRepository.findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId, accountId);
     }
 
     // Get transactions by user
     @Transactional(readOnly = true)
     public List<Transaction> getUserTransactions(Integer userId) {
         return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    // Get paginated transactions by user
+    @Transactional(readOnly = true)
+    public Page<Transaction> getUserTransactionsPaginated(Integer userId, Pageable pageable) {
+        return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    }
+
+    // Get paginated transactions for an account
+    @Transactional(readOnly = true)
+    public Page<Transaction> getAccountTransactionsPaginated(Integer accountId, Pageable pageable) {
+        return transactionRepository.findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId, accountId, pageable);
     }
 
     // Get transactions by date range

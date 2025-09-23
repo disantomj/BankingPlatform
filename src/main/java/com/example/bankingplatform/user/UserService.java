@@ -7,8 +7,8 @@ import com.example.bankingplatform.security.JwtProvider;
 import com.example.bankingplatform.user.dto.LoginRequest;
 import com.example.bankingplatform.user.dto.SignupRequest;
 import com.example.bankingplatform.user.dto.AuthResponse;
-import com.example.bankingplatform.user.exception.UserAlreadyExistsException;
-import com.example.bankingplatform.user.exception.InvalidCredentialsException;
+import com.example.bankingplatform.exception.UserAlreadyExistsException;
+import com.example.bankingplatform.exception.InvalidCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,11 +40,11 @@ public class UserService {
     public AuthResponse signup(SignupRequest signupRequest) {
         // Validate user doesn't already exist
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
-            throw new UserAlreadyExistsException("Username already exists: " + signupRequest.getUsername());
+            throw new UserAlreadyExistsException("username", signupRequest.getUsername());
         }
 
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new UserAlreadyExistsException("Email already exists: " + signupRequest.getEmail());
+            throw new UserAlreadyExistsException("email", signupRequest.getEmail());
         }
 
         // Create new user
@@ -81,7 +81,7 @@ public class UserService {
         try {
             // Find user by username
             User user = userRepository.findByUsername(loginRequest.getUsername())
-                    .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
+                    .orElseThrow(() -> new InvalidCredentialsException());
 
             // Verify password
             if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
@@ -94,7 +94,7 @@ public class UserService {
                     "Failed login attempt - incorrect password",
                     "Invalid password provided"
                 );
-                throw new InvalidCredentialsException("Invalid username or password");
+                throw new InvalidCredentialsException();
             }
 
             // Log successful login

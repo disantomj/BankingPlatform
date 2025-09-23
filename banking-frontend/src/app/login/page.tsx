@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Card, CardBody } from '@/components/ui';
+import { Button, Input, Card, CardBody, ErrorAlert } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
+import { parseApiError, getValidationMessage } from '@/lib/errorUtils';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -15,6 +16,7 @@ export default function LoginPage() {
     password: '',
   });
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,9 +37,11 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setApiError(null);
 
-    // Basic validation
+    // Basic validation - only check if fields are provided
     const newErrors: {[key: string]: string} = {};
+
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     }
@@ -61,10 +65,10 @@ export default function LoginPage() {
         // Redirect to dashboard on successful login
         router.push('/dashboard');
       } else {
-        setErrors({ general: result.error || 'Login failed. Please try again.' });
+        setApiError(result.error || 'Login failed. Please try again.');
       }
     } catch (error) {
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      setApiError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -87,11 +91,10 @@ export default function LoginPage() {
               <p className="text-neutral-600">Enter your credentials to access your account</p>
             </div>
 
-            {errors.general && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {errors.general}
-              </div>
-            )}
+            <ErrorAlert
+              error={apiError ? parseApiError(apiError) : null}
+              onDismiss={() => setApiError(null)}
+            />
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input

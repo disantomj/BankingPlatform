@@ -222,6 +222,15 @@ class ApiClient {
     return this.request<Transaction[]>(`/api/transactions/search?q=${encodeURIComponent(query)}`);
   }
 
+  // Paginated transaction methods
+  async getUserTransactionsPaginated(userId: number, page: number = 0, size: number = 20): Promise<ApiResponse<any>> {
+    return this.request(`/api/transactions/user/${userId}/paginated?page=${page}&size=${size}&sort=createdAt,desc`);
+  }
+
+  async getAccountTransactionsPaginated(accountId: number, page: number = 0, size: number = 20): Promise<ApiResponse<any>> {
+    return this.request(`/api/transactions/account/${accountId}/paginated?page=${page}&size=${size}&sort=createdAt,desc`);
+  }
+
   // Admin transaction management
   async processTransaction(transactionId: number): Promise<ApiResponse<Transaction>> {
     return this.request<Transaction>(`/api/transactions/${transactionId}/process`, {

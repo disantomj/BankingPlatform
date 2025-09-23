@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useTransactions } from '@/hooks/useTransactions';
-import { Button, Input, Card, CardBody } from '@/components/ui';
+import { Button, Input, Card, CardBody, ErrorAlert } from '@/components/ui';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { parseApiError, getValidationMessage } from '@/lib/errorUtils';
 import { apiClient } from '@/lib/api/client';
 import Link from 'next/link';
 
@@ -16,6 +17,7 @@ export default function TransactionsPage() {
 
   const [activeTab, setActiveTab] = useState<'history' | 'transfer' | 'deposit' | 'withdraw'>('history');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
   const [depositLoading, setDepositLoading] = useState(false);
@@ -48,6 +50,7 @@ export default function TransactionsPage() {
 
   const clearMessages = () => {
     setErrors({});
+    setApiError(null);
     setSuccessMessage('');
   };
 
@@ -72,10 +75,10 @@ export default function TransactionsPage() {
         setTransferForm({ fromAccountId: '', toAccountId: '', amount: '', description: '' });
         refetchTransactions();
       } else {
-        setErrors({ general: response.error || 'Transfer failed' });
+        setApiError(response.error || 'Transfer failed');
       }
     } catch (error) {
-      setErrors({ general: 'An unexpected error occurred' });
+      setApiError('An unexpected error occurred');
     } finally {
       setTransferLoading(false);
     }

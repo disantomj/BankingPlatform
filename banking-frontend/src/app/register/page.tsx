@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, Card, CardBody } from '@/components/ui';
+import { Button, Card, CardBody, ErrorAlert } from '@/components/ui';
+import { parseApiError, getValidationMessage } from '@/lib/errorUtils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,28 +32,24 @@ export default function RegisterPage() {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError(null);
+    }
   };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
-    }
+    // Use validation utilities
+    const usernameError = getValidationMessage('username', formData.username);
+    if (usernameError) newErrors.username = usernameError;
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
+    const emailError = getValidationMessage('email', formData.email);
+    if (emailError) newErrors.email = emailError;
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
+    const passwordError = getValidationMessage('password', formData.password);
+    if (passwordError) newErrors.password = passwordError;
 
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
@@ -80,6 +78,7 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     setErrors({});
+    setApiError(null);
 
     try {
       const registerData = {
@@ -96,10 +95,10 @@ export default function RegisterPage() {
       if (result.success) {
         router.push('/dashboard');
       } else {
-        setErrors({ general: result.error || 'Registration failed' });
+        setApiError(result.error || 'Registration failed');
       }
     } catch (error) {
-      setErrors({ general: 'An error occurred during registration' });
+      setApiError('An error occurred during registration');
     } finally {
       setIsSubmitting(false);
     }
@@ -126,12 +125,11 @@ export default function RegisterPage() {
         <Card>
           <CardBody>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* General Error */}
-              {errors.general && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {errors.general}
-                </div>
-              )}
+              {/* API Error */}
+              <ErrorAlert
+                error={apiError ? parseApiError(apiError) : null}
+                onDismiss={() => setApiError(null)}
+              />
 
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
