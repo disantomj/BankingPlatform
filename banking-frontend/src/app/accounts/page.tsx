@@ -61,7 +61,7 @@ export default function AccountsPage() {
         userId: user.id,
         accountType: createForm.accountType,
         accountName: createForm.accountName,
-        initialBalance: parseFloat(createForm.initialBalance) || 0,
+        initialBalance: createForm.initialBalance ? parseFloat(createForm.initialBalance) : 0,
         currency: createForm.currency
       });
 

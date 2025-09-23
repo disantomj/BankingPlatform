@@ -14,6 +14,7 @@ export default function LoansPage() {
   const { loans, isLoading: isLoadingLoans, error: loansError, applyForLoan } = useLoans(user?.id);
   const { accounts } = useAccounts(user?.id);
   const [activeTab, setActiveTab] = useState<'overview' | 'apply'>('overview');
+  const [viewedApprovedLoans, setViewedApprovedLoans] = useState<Set<number>>(new Set());
   const [applicationForm, setApplicationForm] = useState({
     loanType: '',
     principalAmount: '',
@@ -31,6 +32,41 @@ export default function LoansPage() {
       window.location.href = '/login';
     }
   }, [isAuthenticated, isLoading]);
+
+  // Load viewed approved loans from localStorage on mount
+  useEffect(() => {
+    if (user?.id) {
+      const stored = localStorage.getItem(`viewedApprovedLoans_${user.id}`);
+      if (stored) {
+        setViewedApprovedLoans(new Set(JSON.parse(stored)));
+      }
+    }
+  }, [user?.id]);
+
+  // Mark approved loans as viewed AFTER a delay to allow first render
+  useEffect(() => {
+    if (loans.length > 0 && user?.id) {
+      const timer = setTimeout(() => {
+        const approvedLoans = loans.filter(loan => loan.status?.toUpperCase() === 'APPROVED');
+        const newViewedLoans = new Set(viewedApprovedLoans);
+        let hasNewViews = false;
+
+        approvedLoans.forEach(loan => {
+          if (!newViewedLoans.has(loan.id)) {
+            newViewedLoans.add(loan.id);
+            hasNewViews = true;
+          }
+        });
+
+        if (hasNewViews) {
+          setViewedApprovedLoans(newViewedLoans);
+          localStorage.setItem(`viewedApprovedLoans_${user.id}`, JSON.stringify([...newViewedLoans]));
+        }
+      }, 2000); // 2 second delay to allow user to see "APPROVED" status
+
+      return () => clearTimeout(timer);
+    }
+  }, [loans, user?.id, viewedApprovedLoans]);
 
 
   const handleLogout = () => {
@@ -77,6 +113,25 @@ export default function LoansPage() {
     if (rate === 0) return principal / termMonths;
     const monthlyRate = rate / 12; // rate is already a decimal (e.g., 0.055 for 5.5%)
     return (principal * monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
+  };
+
+  // Helper function to get the display status for a loan
+  const getLoanDisplayStatus = (loan: any): string => {
+    if (loan.status?.toUpperCase() === 'APPROVED') {
+      // If this is the first time viewing this approved loan, show "APPROVED"
+      if (!viewedApprovedLoans.has(loan.id)) {
+        return 'APPROVED';
+      }
+      // If already viewed, show as "ACTIVE"
+      return 'ACTIVE';
+    }
+    // For all other statuses, return as-is
+    return loan.status?.toUpperCase() || 'UNKNOWN';
+  };
+
+  // Helper function to check if loan should be treated as active for calculations
+  const isActiveForCalculations = (loan: any): boolean => {
+    return ['ACTIVE', 'DISBURSED', 'APPROVED'].includes(loan.status?.toUpperCase());
   };
 
   // Show loading while checking authentication
@@ -177,7 +232,11 @@ export default function LoansPage() {
                 <div>
                   <p className="text-neutral-600 text-sm font-medium">Total Loan Balance</p>
                   <p className="text-2xl font-semibold text-dark">
-                    {formatCurrency(loans.reduce((sum, loan) => sum + (loan.currentBalance || 0), 0))}
+                    {formatCurrency(loans.filter(l => ['ACTIVE', 'DISBURSED', 'APPROVED'].includes(l.status?.toUpperCase())).reduce((sum, loan) => {
+                      // Use currentBalance for active/disbursed loans, principalAmount for approved loans
+                      const balance = loan.status?.toUpperCase() === 'APPROVED' ? loan.principalAmount : (loan.currentBalance || 0);
+                      return sum + balance;
+                    }, 0))}
                   </p>
                 </div>
                 <div className="text-primary">
@@ -195,7 +254,7 @@ export default function LoansPage() {
                 <div>
                   <p className="text-neutral-600 text-sm font-medium">Est. Monthly Payments</p>
                   <p className="text-2xl font-semibold text-dark">
-                    {formatCurrency(loans.reduce((sum, loan) => {
+                    {formatCurrency(loans.filter(l => ['ACTIVE', 'DISBURSED', 'APPROVED'].includes(l.status?.toUpperCase())).reduce((sum, loan) => {
                       const payment = loan.monthlyPayment || calculateMonthlyPayment(loan.principalAmount, loan.interestRate, loan.termMonths);
                       return sum + payment;
                     }, 0))}
@@ -214,8 +273,8 @@ export default function LoansPage() {
             <CardBody>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-neutral-600 text-sm font-medium">Active Loans</p>
-                  <p className="text-2xl font-semibold text-dark">{loans.filter(l => ['ACTIVE', 'DISBURSED'].includes(l.status?.toUpperCase())).length}</p>
+                  <p className="text-neutral-600 text-sm font-medium">Active & Approved Loans</p>
+                  <p className="text-2xl font-semibold text-dark">{loans.filter(l => ['ACTIVE', 'DISBURSED', 'APPROVED'].includes(l.status?.toUpperCase())).length}</p>
                 </div>
                 <div className="text-primary">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
@@ -279,7 +338,16 @@ export default function LoansPage() {
                 </CardBody>
               </Card>
             ) : (
-              loans.map((loan) => {
+              loans.filter((loan) => {
+                // Filter out rejected loans older than 24 hours
+                if (loan.status?.toUpperCase() === 'REJECTED') {
+                  const createdAt = new Date(loan.createdAt);
+                  const now = new Date();
+                  const hoursDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+                  return hoursDiff < 24; // Only show rejected loans less than 24 hours old
+                }
+                return true; // Show all non-rejected loans
+              }).map((loan) => {
                 const monthlyPayment = loan.monthlyPayment || calculateMonthlyPayment(loan.principalAmount, loan.interestRate, loan.termMonths);
                 const progressPercent = Math.round(((loan.principalAmount - (loan.currentBalance || 0)) / loan.principalAmount) * 100);
 
@@ -291,9 +359,24 @@ export default function LoansPage() {
                           <h3 className="text-xl font-semibold text-dark">{getLoanTypeDisplay(loan.loanType)}</h3>
                           <p className="text-neutral-600">Loan ID: {loan.id}</p>
                           <p className="text-sm text-neutral-500">{loan.purpose}</p>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${getLoanStatusColor(loan.status)}`}>
-                            {loan.status?.toUpperCase() || 'UNKNOWN'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${getLoanStatusColor(getLoanDisplayStatus(loan))}`}>
+                            {getLoanDisplayStatus(loan)}
                           </span>
+                          {loan.status?.toUpperCase() === 'REJECTED' && (() => {
+                            const createdAt = new Date(loan.createdAt);
+                            const now = new Date();
+                            const hoursRemaining = 24 - ((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60));
+                            if (hoursRemaining > 0) {
+                              return (
+                                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                                  <p className="text-xs text-red-700 font-medium">
+                                    ⚠️ This loan will terminate in {Math.ceil(hoursRemaining)} hour{Math.ceil(hoursRemaining) !== 1 ? 's' : ''}.
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-dark">{formatCurrency(loan.currentBalance || 0)}</p>

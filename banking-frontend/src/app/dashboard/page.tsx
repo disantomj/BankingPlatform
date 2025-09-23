@@ -87,8 +87,9 @@ export default function DashboardPage() {
     );
   }
 
-  // Calculate total balance across all accounts
-  const totalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
+  // Calculate total balance across active accounts only
+  const activeAccounts = accounts.filter(account => account.status === 'ACTIVE');
+  const totalBalance = activeAccounts.reduce((sum, account) => sum + (account.balance || 0), 0);
 
   return (
     <div className="min-h-screen bg-accent-200">
@@ -161,7 +162,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-neutral-600 text-sm font-medium">Active Accounts</p>
                   <p className="text-2xl font-semibold text-dark">
-                    {accountsLoading ? '...' : accounts.length}
+                    {accountsLoading ? '...' : activeAccounts.length}
                   </p>
                 </div>
                 <div className="text-secondary">
@@ -237,10 +238,20 @@ export default function DashboardPage() {
                       <div>
                         <h4 className="font-semibold text-dark">{account.accountName || 'Account'}</h4>
                         <p className="text-sm text-neutral-600">{account.accountType} • {account.accountNum}</p>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                          account.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                          account.status === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' :
+                          account.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
+                          account.status === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
+                          account.status === 'FROZEN' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {account.status}
+                        </span>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold text-dark">
-                          {formatCurrency(account.balance)}
+                        <p className={`text-lg font-semibold ${account.status === 'ACTIVE' ? 'text-dark' : 'text-neutral-400'}`}>
+                          {account.status === 'ACTIVE' ? formatCurrency(account.balance) : '---'}
                         </p>
                         <p className="text-sm text-neutral-600">{account.currency}</p>
                       </div>

@@ -3,6 +3,8 @@ package com.example.bankingplatform.account;
 import com.example.bankingplatform.user.User;
 import com.example.bankingplatform.user.UserRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +42,7 @@ public class AccountController {
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(account);
         } catch (Exception e) {
+            e.printStackTrace(); // Log the full stack trace
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         }
     }
@@ -127,10 +130,14 @@ public class AccountController {
 
     // Request DTOs
     public static class CreateAccountRequest {
+        @NotNull
         private Integer userId;
+        @NotNull
         private AccountType accountType;
+        @NotBlank
         private String accountName;
         private BigDecimal initialBalance;
+        @NotBlank
         private String currency;
 
         // Getters and setters

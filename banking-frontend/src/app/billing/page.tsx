@@ -371,7 +371,7 @@ export default function BillingPage() {
               <Card>
                 <CardBody className="text-center py-8">
                   <p className="text-red-600">Error: {billsError}</p>
-                  <Button variant="outline" onClick={loadBills} className="mt-4">
+                  <Button variant="outline" onClick={refetch} className="mt-4">
                     Retry
                   </Button>
                 </CardBody>
