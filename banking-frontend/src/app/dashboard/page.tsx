@@ -130,7 +130,7 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-bold text-dark mb-2">
             Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}!
           </h2>
-          <p className="text-neutral-600">Here's what's happening with your accounts today.</p>
+          <p className="text-neutral-600">Here&apos;s what&apos;s happening with your accounts today.</p>
         </div>
 
         {/* Quick Stats */}
