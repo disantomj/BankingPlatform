@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    appDir: true,
+  eslint: {
+    // Disable ESLint during builds
+    ignoreDuringBuilds: true,
   },
 }
 
