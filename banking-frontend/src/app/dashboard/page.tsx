@@ -226,7 +226,9 @@ export default function DashboardPage() {
                 <Card>
                   <CardBody className="text-center py-8">
                     <p className="text-neutral-600 mb-4">No accounts found</p>
-                    <Button variant="primary">Open New Account</Button>
+                    <Link href="/accounts">
+                      <Button variant="primary">Open New Account</Button>
+                    </Link>
                   </CardBody>
                 </Card>
               )}
