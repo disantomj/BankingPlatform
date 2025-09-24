@@ -37,6 +37,7 @@ build/
 .env.local
 .env.production
 .env.development
+.env.prod
 *.key
 *.pem
 *.p12
