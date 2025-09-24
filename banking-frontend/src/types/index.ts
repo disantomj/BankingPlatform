@@ -60,6 +60,15 @@ export interface Account {
   closedAt?: string;
 }
 
+// Create Account Request - matches backend CreateAccountRequest
+export interface CreateAccountRequest {
+  userId: number;
+  accountType: AccountType;
+  accountName: string;
+  initialBalance?: number;
+  currency: string;
+}
+
 // Transaction types
 export enum TransactionType {
   DEPOSIT = 'DEPOSIT',

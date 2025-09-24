@@ -1,4 +1,4 @@
-import { LoginRequest, RegisterRequest, ApiResponse, User, Account, Transaction } from '@/types';
+import { LoginRequest, RegisterRequest, ApiResponse, User, Account, Transaction, CreateAccountRequest } from '@/types';
 
 class ApiClient {
   private baseURL: string;
@@ -130,7 +130,7 @@ class ApiClient {
     return this.request<Account>(`/api/accounts/${accountId}`);
   }
 
-  async createAccount(accountData: Partial<Account>): Promise<ApiResponse<Account>> {
+  async createAccount(accountData: CreateAccountRequest): Promise<ApiResponse<Account>> {
     return this.request<Account>('/api/accounts', {
       method: 'POST',
       body: JSON.stringify(accountData),
