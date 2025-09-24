@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Account } from '@/types';
+import { Account, CreateAccountRequest } from '@/types';
 import { apiClient } from '@/lib/api/client';
 
 // Query keys for cache invalidation
@@ -50,7 +50,7 @@ export function useCreateAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (accountData: Partial<Account>) => {
+    mutationFn: async (accountData: CreateAccountRequest) => {
       const response = await apiClient.createAccount(accountData);
       if (!response.success) {
         throw new Error(response.error || 'Failed to create account');
