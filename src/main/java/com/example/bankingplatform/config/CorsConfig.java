@@ -17,7 +17,7 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002",
-                               "https://*.vercel.app")
+                               "https://banking-platform-plum.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
@@ -33,7 +33,7 @@ public class CorsConfig implements WebMvcConfigurer {
             "http://localhost:3000",
             "http://localhost:3001",
             "http://localhost:3002",
-            "https://*.vercel.app"
+            "https://banking-platform-plum.vercel.app"
         ));
 
         // Allow all HTTP methods
