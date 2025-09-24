@@ -58,10 +58,10 @@ export default function AccountsPage() {
 
     try {
       const response = await apiClient.createAccount({
-        user: user,
+        userId: user.id,
         accountType: createForm.accountType,
         accountName: createForm.accountName,
-        balance: createForm.initialBalance ? parseFloat(createForm.initialBalance) : 0,
+        initialBalance: createForm.initialBalance ? parseFloat(createForm.initialBalance) : 0,
         currency: createForm.currency
       });
 
