@@ -44,7 +44,7 @@ export function useUserTransactionsPaginated(userId?: number, page: number = 0, 
     },
     enabled: !!userId,
     staleTime: 1 * 60 * 1000, // 1 minute
-    keepPreviousData: true, // Keep previous page data while loading new page
+    placeholderData: (previousData) => previousData, // Keep previous page data while loading new page
   });
 }
 
@@ -62,7 +62,7 @@ export function useAccountTransactionsPaginated(accountId?: number, page: number
     },
     enabled: !!accountId,
     staleTime: 1 * 60 * 1000, // 1 minute
-    keepPreviousData: true, // Keep previous page data while loading new page
+    placeholderData: (previousData) => previousData, // Keep previous page data while loading new page
   });
 }
 

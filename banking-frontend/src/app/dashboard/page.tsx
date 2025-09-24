@@ -379,7 +379,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-neutral-500 mt-1">
                         {(() => {
                           try {
-                            return transaction.transactionDate ? formatDate(transaction.transactionDate) : 'Recently';
+                            return transaction.createdAt ? formatDate(transaction.createdAt) : 'Recently';
                           } catch (error) {
                             return 'Recently';
                           }
