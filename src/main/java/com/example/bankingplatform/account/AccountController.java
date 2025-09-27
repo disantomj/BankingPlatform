@@ -94,19 +94,8 @@ public class AccountController {
         }
     }
 
-    @PutMapping("/{id}/balance")
-    public ResponseEntity<Account> updateBalance(
-            @PathVariable Integer id,
-            @RequestBody UpdateBalanceRequest request) {
-        try {
-            Account account = accountService.updateBalance(id, request.getNewBalance());
-            return ResponseEntity.ok(account);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+    // REMOVED: Direct balance update endpoint - balances should only change through transactions
+    // Use /api/transactions/deposit or /api/transactions/transfer instead
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAccount(@PathVariable Integer id) {
@@ -168,10 +157,5 @@ public class AccountController {
         public void setStatus(AccountStatus status) { this.status = status; }
     }
 
-    public static class UpdateBalanceRequest {
-        private BigDecimal newBalance;
-
-        public BigDecimal getNewBalance() { return newBalance; }
-        public void setNewBalance(BigDecimal newBalance) { this.newBalance = newBalance; }
-    }
+    // REMOVED: UpdateBalanceRequest - no longer needed since direct balance updates are disabled
 }

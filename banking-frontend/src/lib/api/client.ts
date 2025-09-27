@@ -341,6 +341,7 @@ class ApiClient {
     amount: number;
     description: string;
     dueDate: string;
+    frequency?: string;
   }): Promise<ApiResponse<any>> {
     return this.request<any>('/api/billings', {
       method: 'POST',
@@ -370,6 +371,17 @@ class ApiClient {
     return this.request<any>(`/api/billings/${id}/payment`, {
       method: 'PUT',
       body: JSON.stringify(paymentData),
+    });
+  }
+
+  // New method for realistic payment processing from account
+  async payBillFromAccount(id: number, accountId: number, paymentAmount: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/billings/${id}/pay-from-account`, {
+      method: 'POST',
+      body: JSON.stringify({
+        accountId: accountId,
+        paymentAmount: paymentAmount
+      }),
     });
   }
 
@@ -625,6 +637,67 @@ class ApiClient {
 
   async deleteLoan(id: number): Promise<ApiResponse<void>> {
     return this.request<void>(`/api/loans/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Credit scoring methods
+  async getCreditScore(userId: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/user/${userId}/credit-score`);
+  }
+
+  async previewLoanDecision(previewData: {
+    userId: number;
+    loanAmount: number;
+    loanType: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>('/api/loans/preview', {
+      method: 'POST',
+      body: JSON.stringify(previewData),
+    });
+  }
+
+  // Loan payment methods
+  async makeLoanPayment(loanId: number, paymentData: {
+    paymentAmount: number;
+    description?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/loans/${loanId}/make-payment`, {
+      method: 'POST',
+      body: JSON.stringify({
+        paymentAmount: paymentData.paymentAmount,
+        description: paymentData.description || 'Manual loan payment',
+      }),
+    });
+  }
+
+  // Notification methods
+  async getUserNotifications(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/notifications/user/${userId}`);
+  }
+
+  async getUnreadNotifications(userId: number): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`/api/notifications/user/${userId}/unread`);
+  }
+
+  async getUnreadNotificationsCount(userId: number): Promise<ApiResponse<number>> {
+    return this.request<number>(`/api/notifications/user/${userId}/unread-count`);
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<ApiResponse<any>> {
+    return this.request<any>(`/api/notifications/${notificationId}/mark-read`, {
+      method: 'PUT',
+    });
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/notifications/user/${userId}/mark-all-read`, {
+      method: 'PUT',
+    });
+  }
+
+  async deleteNotification(notificationId: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/notifications/${notificationId}`, {
       method: 'DELETE',
     });
   }

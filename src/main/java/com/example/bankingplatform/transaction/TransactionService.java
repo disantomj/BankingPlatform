@@ -34,12 +34,20 @@ public class TransactionService {
         this.auditService = auditService;
     }
 
-    // Create deposit transaction
+    // Create deposit transaction with realistic processing
     public Transaction createDeposit(Integer toAccountId, BigDecimal amount, Integer userId,
                                    String description, TransactionChannel channel) {
 
         Account account = accountRepository.findById(toAccountId)
             .orElseThrow(() -> new RuntimeException("Account not found: " + toAccountId));
+
+        // Validate amount
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Deposit amount must be positive");
+        }
+
+        // Set realistic limits based on channel
+        validateDepositLimits(amount, channel);
 
         Transaction transaction = new Transaction();
         transaction.setTransactionReference(generateTransactionReference());
@@ -54,12 +62,29 @@ public class TransactionService {
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
+        // Auto-process certain types of deposits immediately
+        if (shouldAutoProcess(channel, amount)) {
+            try {
+                savedTransaction = processTransaction(savedTransaction.getId());
+            } catch (Exception e) {
+                // Log but don't fail - transaction remains pending
+                auditService.logFailedAction(
+                    userId,
+                    "SYSTEM",
+                    AuditAction.TRANSACTION_PROCESSED,
+                    AuditSeverity.MEDIUM,
+                    "Auto-processing failed for deposit: " + savedTransaction.getTransactionReference(),
+                    e.getMessage()
+                );
+            }
+        }
+
         auditService.logEntityAction(
             userId,
             "User" + userId,
             AuditAction.TRANSACTION_CREATED,
             AuditSeverity.MEDIUM,
-            "Deposit transaction created - Amount: " + amount + " " + account.getCurrency(),
+            "Deposit transaction created - Amount: " + amount + " " + account.getCurrency() + " via " + channel,
             "Transaction",
             savedTransaction.getId().toString()
         );
@@ -67,17 +92,25 @@ public class TransactionService {
         return savedTransaction;
     }
 
-    // Create withdrawal transaction
+    // Create withdrawal transaction with validation
     public Transaction createWithdrawal(Integer fromAccountId, BigDecimal amount, Integer userId,
                                       String description, TransactionChannel channel) {
 
         Account account = accountRepository.findById(fromAccountId)
             .orElseThrow(() -> new RuntimeException("Account not found: " + fromAccountId));
 
+        // Validate amount
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Withdrawal amount must be positive");
+        }
+
         // Check sufficient balance
         if (account.getAvailableBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new RuntimeException("Insufficient funds. Available: " + account.getAvailableBalance() + ", Requested: " + amount);
         }
+
+        // Validate withdrawal limits
+        validateWithdrawalLimits(amount, channel);
 
         Transaction transaction = new Transaction();
         transaction.setTransactionReference(generateTransactionReference());
@@ -92,12 +125,28 @@ public class TransactionService {
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
+        // Auto-process withdrawals for certain channels
+        if (shouldAutoProcess(channel, amount)) {
+            try {
+                savedTransaction = processTransaction(savedTransaction.getId());
+            } catch (Exception e) {
+                auditService.logFailedAction(
+                    userId,
+                    "SYSTEM",
+                    AuditAction.TRANSACTION_PROCESSED,
+                    AuditSeverity.MEDIUM,
+                    "Auto-processing failed for withdrawal: " + savedTransaction.getTransactionReference(),
+                    e.getMessage()
+                );
+            }
+        }
+
         auditService.logEntityAction(
             userId,
             "User" + userId,
             AuditAction.TRANSACTION_CREATED,
             AuditSeverity.MEDIUM,
-            "Withdrawal transaction created - Amount: " + amount + " " + account.getCurrency(),
+            "Withdrawal transaction created - Amount: " + amount + " " + account.getCurrency() + " via " + channel,
             "Transaction",
             savedTransaction.getId().toString()
         );
@@ -147,6 +196,24 @@ public class TransactionService {
             "Transaction",
             savedTransaction.getId().toString()
         );
+
+        // Check if transaction should be auto-processed
+        if (shouldAutoProcess(channel, amount)) {
+            try {
+                return processTransaction(savedTransaction.getId());
+            } catch (Exception e) {
+                // If auto-processing fails, log it but return the pending transaction
+                auditService.logFailedAction(
+                    userId,
+                    "User" + userId,
+                    AuditAction.TRANSACTION_PROCESSED,
+                    AuditSeverity.HIGH,
+                    "Auto-processing failed for transfer transaction",
+                    e.getMessage()
+                );
+                return savedTransaction;
+            }
+        }
 
         return savedTransaction;
     }
@@ -331,5 +398,47 @@ public class TransactionService {
             reference = "TXN" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
         } while (transactionRepository.existsByTransactionReference(reference));
         return reference;
+    }
+
+    private void validateDepositLimits(BigDecimal amount, TransactionChannel channel) {
+        BigDecimal maxAmount = switch (channel) {
+            case ATM -> new BigDecimal("1000.00"); // ATM deposit limit
+            case MOBILE_APP -> new BigDecimal("5000.00"); // Mobile app limit
+            case ONLINE_BANKING -> new BigDecimal("10000.00"); // Online banking limit
+            case THIRD_PARTY -> new BigDecimal("100000.00"); // Wire transfer limit
+            case BRANCH -> new BigDecimal("50000.00"); // Branch limit
+            default -> new BigDecimal("1000.00"); // Default conservative limit
+        };
+
+        if (amount.compareTo(maxAmount) > 0) {
+            throw new RuntimeException("Deposit amount exceeds limit for " + channel + ". Maximum: " + maxAmount);
+        }
+    }
+
+    private void validateWithdrawalLimits(BigDecimal amount, TransactionChannel channel) {
+        BigDecimal maxAmount = switch (channel) {
+            case ATM -> new BigDecimal("500.00"); // ATM withdrawal limit
+            case MOBILE_APP -> new BigDecimal("2000.00"); // Mobile app limit
+            case ONLINE_BANKING -> new BigDecimal("5000.00"); // Online banking limit
+            case THIRD_PARTY -> new BigDecimal("50000.00"); // Wire transfer limit
+            case BRANCH -> new BigDecimal("25000.00"); // Branch limit
+            default -> new BigDecimal("500.00"); // Default conservative limit
+        };
+
+        if (amount.compareTo(maxAmount) > 0) {
+            throw new RuntimeException("Withdrawal amount exceeds limit for " + channel + ". Maximum: " + maxAmount);
+        }
+    }
+
+    private boolean shouldAutoProcess(TransactionChannel channel, BigDecimal amount) {
+        // Auto-process small amounts and certain channels immediately
+        BigDecimal autoProcessLimit = new BigDecimal("2500.00");
+
+        return switch (channel) {
+            case ATM, MOBILE_APP, ONLINE_BANKING -> amount.compareTo(autoProcessLimit) <= 0;
+            case BRANCH -> true; // Branch transactions are verified in person
+            case THIRD_PARTY -> false; // Wire transfers need verification
+            default -> false;
+        };
     }
 }

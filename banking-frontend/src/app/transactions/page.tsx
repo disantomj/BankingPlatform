@@ -29,18 +29,21 @@ export default function TransactionsPage() {
     toAccountId: '',
     amount: '',
     description: '',
+    channel: 'ONLINE_BANKING',
   });
 
   const [depositForm, setDepositForm] = useState({
     toAccountId: '',
     amount: '',
     description: '',
+    channel: 'ONLINE_BANKING',
   });
 
   const [withdrawForm, setWithdrawForm] = useState({
     fromAccountId: '',
     amount: '',
     description: '',
+    channel: 'ONLINE_BANKING',
   });
 
   const handleLogout = () => {
@@ -68,11 +71,12 @@ export default function TransactionsPage() {
         amount: parseFloat(transferForm.amount),
         userId: user.id,
         description: transferForm.description || undefined,
+        channel: transferForm.channel,
       });
 
       if (response.success) {
         setSuccessMessage('Transfer completed successfully!');
-        setTransferForm({ fromAccountId: '', toAccountId: '', amount: '', description: '' });
+        setTransferForm({ fromAccountId: '', toAccountId: '', amount: '', description: '', channel: 'ONLINE_BANKING' });
         refetchTransactions();
       } else {
         setApiError(response.error || 'Transfer failed');
@@ -97,11 +101,12 @@ export default function TransactionsPage() {
         amount: parseFloat(depositForm.amount),
         userId: user.id,
         description: depositForm.description || undefined,
+        channel: depositForm.channel,
       });
 
       if (response.success) {
         setSuccessMessage('Deposit completed successfully!');
-        setDepositForm({ toAccountId: '', amount: '', description: '' });
+        setDepositForm({ toAccountId: '', amount: '', description: '', channel: 'ONLINE_BANKING' });
         refetchTransactions();
       } else {
         setErrors({ general: response.error || 'Deposit failed' });
@@ -126,11 +131,12 @@ export default function TransactionsPage() {
         amount: parseFloat(withdrawForm.amount),
         userId: user.id,
         description: withdrawForm.description || undefined,
+        channel: withdrawForm.channel,
       });
 
       if (response.success) {
         setSuccessMessage('Withdrawal completed successfully!');
-        setWithdrawForm({ fromAccountId: '', amount: '', description: '' });
+        setWithdrawForm({ fromAccountId: '', amount: '', description: '', channel: 'ONLINE_BANKING' });
         refetchTransactions();
       } else {
         setErrors({ general: response.error || 'Withdrawal failed' });
@@ -299,6 +305,19 @@ export default function TransactionsPage() {
           <Card>
             <CardBody>
               <h3 className="text-xl font-semibold text-dark mb-4">Transfer Money</h3>
+
+              {/* Transaction Limits Info */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-green-900 mb-2">Transfer Limits by Channel</h4>
+                <div className="text-sm text-green-700 space-y-1">
+                  <p><strong>ATM:</strong> $500 maximum</p>
+                  <p><strong>Mobile App:</strong> $2,000 maximum</p>
+                  <p><strong>Online Banking:</strong> $5,000 maximum (auto-processes ≤$2,500)</p>
+                  <p><strong>Branch:</strong> $25,000 maximum (auto-processes all amounts)</p>
+                  <p><strong>Wire Transfer:</strong> $50,000 maximum (manual review required)</p>
+                </div>
+              </div>
+
               <form onSubmit={handleTransfer} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -331,7 +350,7 @@ export default function TransactionsPage() {
                       <option value="">Select account</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.id}>
-                          {account.accountName} - {account.accountNum}
+                          {account.accountName} - {formatCurrency(account.balance)}
                         </option>
                       ))}
                     </select>
@@ -350,12 +369,29 @@ export default function TransactionsPage() {
                   disabled={withdrawalLoading}
                 />
 
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-2">Transfer Channel</label>
+                  <select
+                    value={transferForm.channel}
+                    onChange={(e) => setTransferForm(prev => ({ ...prev, channel: e.target.value }))}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    required
+                    disabled={transferLoading}
+                  >
+                    <option value="ONLINE_BANKING">Online Banking</option>
+                    <option value="MOBILE_APP">Mobile App</option>
+                    <option value="ATM">ATM</option>
+                    <option value="BRANCH">Branch</option>
+                    <option value="THIRD_PARTY">Wire Transfer</option>
+                  </select>
+                </div>
+
                 <Input
                   label="Description (Optional)"
                   value={transferForm.description}
                   onChange={(e) => setTransferForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="What's this transfer for?"
-                  disabled={withdrawalLoading}
+                  disabled={transferLoading}
                 />
 
                 <Button
@@ -376,6 +412,19 @@ export default function TransactionsPage() {
           <Card>
             <CardBody>
               <h3 className="text-xl font-semibold text-dark mb-4">Deposit Money</h3>
+
+              {/* Transaction Limits Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-blue-900 mb-2">Deposit Limits by Channel</h4>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <p><strong>ATM:</strong> $1,000 maximum</p>
+                  <p><strong>Mobile App:</strong> $5,000 maximum</p>
+                  <p><strong>Online Banking:</strong> $10,000 maximum (auto-processes ≤$2,500)</p>
+                  <p><strong>Branch:</strong> $50,000 maximum (auto-processes all amounts)</p>
+                  <p><strong>Wire Transfer:</strong> $100,000 maximum (manual review required)</p>
+                </div>
+              </div>
+
               <form onSubmit={handleDeposit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-2">To Account</label>
@@ -389,9 +438,26 @@ export default function TransactionsPage() {
                     <option value="">Select account</option>
                     {accounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {account.accountName} - {account.accountNum}
+                        {account.accountName} - {formatCurrency(account.balance)}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-2">Deposit Channel</label>
+                  <select
+                    value={depositForm.channel}
+                    onChange={(e) => setDepositForm(prev => ({ ...prev, channel: e.target.value }))}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    required
+                    disabled={depositLoading}
+                  >
+                    <option value="ONLINE_BANKING">Online Banking</option>
+                    <option value="MOBILE_APP">Mobile App</option>
+                    <option value="ATM">ATM</option>
+                    <option value="BRANCH">Branch</option>
+                    <option value="THIRD_PARTY">Wire Transfer</option>
                   </select>
                 </div>
 
@@ -404,7 +470,7 @@ export default function TransactionsPage() {
                   onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="0.00"
                   required
-                  disabled={withdrawalLoading}
+                  disabled={depositLoading}
                 />
 
                 <Input
@@ -433,6 +499,19 @@ export default function TransactionsPage() {
           <Card>
             <CardBody>
               <h3 className="text-xl font-semibold text-dark mb-4">Withdraw Money</h3>
+
+              {/* Transaction Limits Info */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-yellow-900 mb-2">Withdrawal Limits by Channel</h4>
+                <div className="text-sm text-yellow-700 space-y-1">
+                  <p><strong>ATM:</strong> $500 maximum</p>
+                  <p><strong>Mobile App:</strong> $2,000 maximum</p>
+                  <p><strong>Online Banking:</strong> $5,000 maximum (auto-processes ≤$2,500)</p>
+                  <p><strong>Branch:</strong> $25,000 maximum (auto-processes all amounts)</p>
+                  <p><strong>Wire Transfer:</strong> $50,000 maximum (manual review required)</p>
+                </div>
+              </div>
+
               <form onSubmit={handleWithdraw} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-2">From Account</label>
@@ -449,6 +528,23 @@ export default function TransactionsPage() {
                         {account.accountName} - {formatCurrency(account.balance)}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-2">Withdrawal Channel</label>
+                  <select
+                    value={withdrawForm.channel}
+                    onChange={(e) => setWithdrawForm(prev => ({ ...prev, channel: e.target.value }))}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    required
+                    disabled={withdrawalLoading}
+                  >
+                    <option value="ONLINE_BANKING">Online Banking</option>
+                    <option value="MOBILE_APP">Mobile App</option>
+                    <option value="ATM">ATM</option>
+                    <option value="BRANCH">Branch</option>
+                    <option value="THIRD_PARTY">Wire Transfer</option>
                   </select>
                 </div>
 

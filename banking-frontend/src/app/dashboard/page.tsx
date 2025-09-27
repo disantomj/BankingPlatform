@@ -4,14 +4,18 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccounts } from '@/hooks/useAccountsQuery';
 import { useTransactions } from '@/hooks/useTransactionsQuery';
+import { useQueryClient } from '@tanstack/react-query';
+import { accountKeys } from '@/hooks/useAccountsQuery';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import NotificationBell from '@/components/NotificationBell';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
   const { data: accounts = [], isLoading: accountsLoading, error: accountsError } = useAccounts(user?.id);
   const { data: transactions = [], isLoading: transactionsLoading, error: transactionsError } = useTransactions(undefined, user?.id);
+  const queryClient = useQueryClient();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -19,6 +23,43 @@ export default function DashboardPage() {
       window.location.href = '/login';
     }
   }, [isAuthenticated, isLoading]);
+
+  // Refresh account data when user navigates back to dashboard
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user?.id) {
+        console.log('Dashboard became visible, refreshing account data for user:', user.id);
+        // Force immediate refetch of account data when user returns to the tab/page
+        queryClient.invalidateQueries({ queryKey: accountKeys.list(user.id) });
+        queryClient.refetchQueries({ queryKey: accountKeys.list(user.id) });
+      }
+    };
+
+    const handleFocus = () => {
+      if (user?.id) {
+        console.log('Dashboard gained focus, refreshing account data for user:', user.id);
+        // Force immediate refetch of account data when user focuses on the window
+        queryClient.invalidateQueries({ queryKey: accountKeys.list(user.id) });
+        queryClient.refetchQueries({ queryKey: accountKeys.list(user.id) });
+      }
+    };
+
+    // Also refresh when the component first mounts (route navigation)
+    if (user?.id) {
+      console.log('Dashboard mounted, refreshing account data for user:', user.id);
+      queryClient.invalidateQueries({ queryKey: accountKeys.list(user.id) });
+    }
+
+    // Listen for visibility changes (tab switching)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Listen for window focus (switching between apps)
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user?.id, queryClient]);
 
   const handleLogout = () => {
     logout();
@@ -115,6 +156,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-neutral-600">Welcome, {user?.username || 'User'}</span>
+              <NotificationBell userId={user?.id} />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 Logout
               </Button>

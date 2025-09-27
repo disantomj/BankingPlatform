@@ -63,4 +63,13 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
 
     // Find by payment transaction
     Optional<Billing> findByPaymentTransactionId(Long transactionId);
+
+    // Find overdue bills
+    List<Billing> findByStatusInAndDueDateBeforeOrderByDueDateDesc(List<BillingStatus> statuses, LocalDate date);
+
+    // Check if bill already exists for period
+    boolean existsByUserAndBillingTypeAndDueDate(User user, BillingType billingType, LocalDate dueDate);
+
+    // Find paid recurring bills
+    List<Billing> findByStatusAndFrequencyIsNotNull(BillingStatus status);
 }

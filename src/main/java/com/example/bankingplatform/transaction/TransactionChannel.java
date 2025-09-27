@@ -8,5 +8,6 @@ public enum TransactionChannel {
     PHONE_BANKING,
     API,
     AUTOMATED,
-    THIRD_PARTY
+    THIRD_PARTY,
+    WIRE_TRANSFER
 }

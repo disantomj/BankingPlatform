@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBilling, Billing } from '@/hooks/useBilling';
+import { useAccounts } from '@/hooks/useAccounts';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api/client';
@@ -11,10 +12,12 @@ import Link from 'next/link';
 export default function BillingPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
   const { bills, paidBills, isLoading: isLoadingBills, error: billsError, refetch, payBill, createBill } = useBilling(user?.id);
+  const { accounts } = useAccounts(user?.id);
   const [activeTab, setActiveTab] = useState<'bills' | 'payments' | 'schedule'>('bills');
   const [showPayBillForm, setShowPayBillForm] = useState(false);
   const [showCreateBillForm, setShowCreateBillForm] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Billing | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -23,7 +26,9 @@ export default function BillingPage() {
     billingType: 'INVOICE',
     amount: '',
     description: '',
-    dueDate: ''
+    dueDate: '',
+    frequency: 'ONE_TIME',
+    accountId: ''
   });
 
   // Redirect to login if not authenticated
@@ -45,17 +50,20 @@ export default function BillingPage() {
   };
 
   const handlePaymentSubmit = async () => {
-    if (!selectedBill) return;
+    if (!selectedBill || !selectedAccountId) return;
 
     try {
-      const response = await apiClient.processBillingPayment(selectedBill.id, {
-        paymentAmount: selectedBill.amount
-      });
+      const response = await apiClient.payBillFromAccount(
+        selectedBill.id,
+        selectedAccountId,
+        selectedBill.amount
+      );
 
       if (response.success) {
-        setSuccessMessage('Payment processed successfully!');
+        setSuccessMessage('Payment processed successfully! Money has been withdrawn from your account.');
         setShowPayBillForm(false);
         setSelectedBill(null);
+        setSelectedAccountId(null);
         refetch(); // Reload bills
       } else {
         setErrorMessage(response.error || 'Payment failed');
@@ -74,7 +82,9 @@ export default function BillingPage() {
       billingType: createBillForm.billingType,
       amount: parseFloat(createBillForm.amount),
       description: createBillForm.description,
-      dueDate: createBillForm.dueDate
+      dueDate: createBillForm.dueDate,
+      frequency: createBillForm.frequency,
+      accountId: createBillForm.accountId ? parseInt(createBillForm.accountId) : undefined
     });
 
     if (result.success) {
@@ -84,7 +94,9 @@ export default function BillingPage() {
         billingType: 'INVOICE',
         amount: '',
         description: '',
-        dueDate: ''
+        dueDate: '',
+        frequency: 'ONE_TIME',
+        accountId: ''
       });
     } else {
       setErrorMessage(result.error || 'Failed to create bill');
@@ -298,6 +310,39 @@ export default function BillingPage() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-dark mb-1">Billing Frequency</label>
+                    <select
+                      value={createBillForm.frequency}
+                      onChange={(e) => setCreateBillForm(prev => ({ ...prev, frequency: e.target.value }))}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                      required
+                    >
+                      <option value="ONE_TIME">One Time</option>
+                      <option value="WEEKLY">Weekly</option>
+                      <option value="MONTHLY">Monthly</option>
+                      <option value="QUARTERLY">Quarterly</option>
+                      <option value="SEMI_ANNUALLY">Semi-Annually</option>
+                      <option value="ANNUALLY">Annually</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-dark mb-1">Account (Optional)</label>
+                    <select
+                      value={createBillForm.accountId}
+                      onChange={(e) => setCreateBillForm(prev => ({ ...prev, accountId: e.target.value }))}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    >
+                      <option value="">Select account (optional)</option>
+                      {accounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.accountType} - {account.accountNum} ({formatCurrency(account.balance)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="flex space-x-4">
                     <Button type="submit" variant="primary" className="flex-1">
                       Create Bill
@@ -331,10 +376,29 @@ export default function BillingPage() {
                     <p className="text-2xl font-bold text-dark">{formatCurrency(selectedBill.amount)}</p>
                     <p className="text-sm text-neutral-600 mt-1">Due: {formatDate(selectedBill.dueDate)}</p>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-dark mb-2">Pay from Account</label>
+                    <select
+                      value={selectedAccountId || ''}
+                      onChange={(e) => setSelectedAccountId(Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                      required
+                    >
+                      <option value="">Select account to pay from</option>
+                      {accounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.accountType} - {account.accountNum} ({formatCurrency(account.balance)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="flex space-x-4">
                     <Button
                       variant="primary"
                       onClick={handlePaymentSubmit}
+                      disabled={!selectedAccountId}
                       className="flex-1"
                     >
                       Pay {formatCurrency(selectedBill.amount)}
@@ -344,6 +408,7 @@ export default function BillingPage() {
                       onClick={() => {
                         setShowPayBillForm(false);
                         setSelectedBill(null);
+                        setSelectedAccountId(null);
                       }}
                       className="flex-1"
                     >

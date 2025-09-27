@@ -22,17 +22,22 @@ public class LoanService {
 
     private final LoanRepository loanRepository;
     private final AuditService auditService;
+    private final CreditScoringService creditScoringService;
 
     @Autowired
-    public LoanService(LoanRepository loanRepository, AuditService auditService) {
+    public LoanService(LoanRepository loanRepository, AuditService auditService, CreditScoringService creditScoringService) {
         this.loanRepository = loanRepository;
         this.auditService = auditService;
+        this.creditScoringService = creditScoringService;
     }
 
     public Loan createLoanApplication(User user, Account disbursementAccount, LoanType loanType,
                                     BigDecimal principalAmount, BigDecimal interestRate, Integer termMonths,
                                     BillingFrequency paymentFrequency, String purpose) {
         String loanReference = generateLoanReference();
+
+        // Automatically evaluate loan application using credit scoring
+        CreditScoringService.LoanApprovalDecision decision = creditScoringService.shouldApproveLoan(user, principalAmount, loanType);
 
         Loan loan = new Loan(loanType, user, disbursementAccount, principalAmount, interestRate,
                            termMonths, paymentFrequency, purpose, LocalDate.now());
@@ -41,14 +46,25 @@ public class LoanService {
         loan.setMaturityDate(calculateMaturityDate(LocalDate.now(), termMonths));
         loan.setMonthlyPayment(loan.calculateMonthlyPayment());
 
+        // Set initial status based on automated decision
+        if (decision.isApproved()) {
+            loan.setStatus(LoanStatus.APPROVED);
+            loan.setApprovalDate(LocalDate.now());
+        } else {
+            loan.setStatus(LoanStatus.REJECTED);
+        }
+
         Loan savedLoan = loanRepository.save(loan);
 
+        // Log the automated decision
         auditService.logEntityAction(
             user.getId(),
-            user.getUsername(),
-            AuditAction.LOAN_CREATED,
-            AuditSeverity.MEDIUM,
-            "Loan application created - " + loanType + " for " + principalAmount + " " + loan.getCurrency(),
+            "SYSTEM_AUTO_APPROVAL",
+            decision.isApproved() ? AuditAction.LOAN_APPROVED : AuditAction.LOAN_REJECTED,
+            AuditSeverity.HIGH,
+            "Loan automatically " + (decision.isApproved() ? "approved" : "rejected") +
+            " - Credit Score: " + decision.getCreditScore().getScore() +
+            " - Reason: " + decision.getReason(),
             "Loan",
             savedLoan.getId().toString()
         );
@@ -275,6 +291,16 @@ public class LoanService {
 
     public List<Loan> findLoansMaturingBetween(LocalDate startDate, LocalDate endDate) {
         return loanRepository.findByMaturityDateBetweenOrderByMaturityDateAsc(startDate, endDate);
+    }
+
+    // Get credit score for a user
+    public CreditScoringService.CreditScore getCreditScore(User user) {
+        return creditScoringService.calculateCreditScore(user);
+    }
+
+    // Get loan approval decision without creating loan
+    public CreditScoringService.LoanApprovalDecision previewLoanDecision(User user, BigDecimal loanAmount, LoanType loanType) {
+        return creditScoringService.shouldApproveLoan(user, loanAmount, loanType);
     }
 
     // Helper methods

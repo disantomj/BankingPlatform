@@ -20,12 +20,14 @@ import java.util.List;
 public class LoanController {
 
     private final LoanService loanService;
+    private final LoanPaymentService loanPaymentService;
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
 
     @Autowired
-    public LoanController(LoanService loanService, UserRepository userRepository, AccountRepository accountRepository) {
+    public LoanController(LoanService loanService, LoanPaymentService loanPaymentService, UserRepository userRepository, AccountRepository accountRepository) {
         this.loanService = loanService;
+        this.loanPaymentService = loanPaymentService;
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
     }
@@ -190,6 +192,34 @@ public class LoanController {
         }
     }
 
+    // Credit scoring endpoints
+    @GetMapping("/user/{userId}/credit-score")
+    public ResponseEntity<?> getCreditScore(@PathVariable Integer userId) {
+        try {
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+            CreditScoringService.CreditScore creditScore = loanService.getCreditScore(user);
+            return ResponseEntity.ok(creditScore);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/preview")
+    public ResponseEntity<?> previewLoanDecision(@Valid @RequestBody LoanPreviewRequest request) {
+        try {
+            User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
+
+            CreditScoringService.LoanApprovalDecision decision = loanService.previewLoanDecision(
+                user, request.getLoanAmount(), request.getLoanType());
+            return ResponseEntity.ok(decision);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
     // Request DTOs
     public static class CreateLoanRequest {
         private Integer userId;
@@ -256,5 +286,42 @@ public class LoanController {
 
         public Integer getDaysDelinquent() { return daysDelinquent; }
         public void setDaysDelinquent(Integer daysDelinquent) { this.daysDelinquent = daysDelinquent; }
+    }
+
+    public static class LoanPreviewRequest {
+        private Integer userId;
+        private BigDecimal loanAmount;
+        private LoanType loanType;
+
+        public Integer getUserId() { return userId; }
+        public void setUserId(Integer userId) { this.userId = userId; }
+
+        public BigDecimal getLoanAmount() { return loanAmount; }
+        public void setLoanAmount(BigDecimal loanAmount) { this.loanAmount = loanAmount; }
+
+        public LoanType getLoanType() { return loanType; }
+        public void setLoanType(LoanType loanType) { this.loanType = loanType; }
+    }
+
+    // Manual payment processing endpoint
+    @PostMapping("/{id}/make-payment")
+    public ResponseEntity<?> makeLoanPayment(@PathVariable Long id, @RequestBody LoanPaymentRequest request) {
+        try {
+            Loan loan = loanPaymentService.processManualPayment(id, request.getPaymentAmount(), request.getDescription());
+            return ResponseEntity.ok(loan);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    public static class LoanPaymentRequest {
+        private BigDecimal paymentAmount;
+        private String description;
+
+        public BigDecimal getPaymentAmount() { return paymentAmount; }
+        public void setPaymentAmount(BigDecimal paymentAmount) { this.paymentAmount = paymentAmount; }
+
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
     }
 }

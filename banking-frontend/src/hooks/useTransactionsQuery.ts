@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Transaction } from '@/types';
 import { apiClient } from '@/lib/api/client';
+import { accountKeys } from './useAccountsQuery';
 
 // Query keys for cache invalidation
 export const transactionKeys = {
@@ -130,7 +131,7 @@ export function useCreateTransfer() {
       });
 
       // Also invalidate accounts to update balances
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: accountKeys.lists() });
     },
   });
 }
@@ -161,7 +162,7 @@ export function useCreateDeposit() {
       queryClient.invalidateQueries({
         queryKey: transactionKeys.list(undefined, variables.userId)
       });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: accountKeys.lists() });
     },
   });
 }
@@ -192,7 +193,7 @@ export function useCreateWithdrawal() {
       queryClient.invalidateQueries({
         queryKey: transactionKeys.list(undefined, variables.userId)
       });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: accountKeys.lists() });
     },
   });
 }

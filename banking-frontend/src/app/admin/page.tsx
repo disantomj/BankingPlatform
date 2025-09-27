@@ -2,18 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTransactions } from '@/hooks/useTransactions';
-import { useAccounts } from '@/hooks/useAccounts';
+import { useTransactions } from '@/hooks/useTransactionsQuery';
+import { useAccounts } from '@/hooks/useAccountsQuery';
 import { useApi } from '@/hooks/useApi';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { accountKeys } from '@/hooks/useAccountsQuery';
+import { transactionKeys } from '@/hooks/useTransactionsQuery';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
-  const { transactions, isLoading: transactionsLoading, error: transactionsError, refetch: refetchTransactions } = useTransactions(undefined, undefined);
-  const { accounts, isLoading: accountsLoading } = useAccounts(undefined);
+  const { data: transactions = [], isLoading: transactionsLoading, error: transactionsError, refetch: refetchTransactions } = useTransactions(undefined, undefined);
+  const { data: accounts = [], isLoading: accountsLoading, refetch: refetchAccounts } = useAccounts(undefined);
+  const queryClient = useQueryClient();
 
   const { data: audits = [], isLoading: auditsLoading } = useApi(() => apiClient.getRecentAudits());
   const { data: failedOps = [], isLoading: failedOpsLoading } = useApi(() => apiClient.getFailedOperations(), { immediate: false });
@@ -56,6 +60,9 @@ export default function AdminDashboard() {
     try {
       const response = await apiClient.processTransaction(transactionId);
       if (response.success) {
+        // Invalidate transaction and account caches
+        queryClient.invalidateQueries({ queryKey: transactionKeys.all });
+        queryClient.invalidateQueries({ queryKey: accountKeys.all });
         await refetchTransactions();
       } else {
         alert('Failed to process transaction: ' + response.error);
@@ -72,6 +79,9 @@ export default function AdminDashboard() {
     try {
       const response = await apiClient.cancelTransaction(transactionId);
       if (response.success) {
+        // Invalidate transaction and account caches
+        queryClient.invalidateQueries({ queryKey: transactionKeys.all });
+        queryClient.invalidateQueries({ queryKey: accountKeys.all });
         await refetchTransactions();
       } else {
         alert('Failed to cancel transaction: ' + response.error);
@@ -88,8 +98,28 @@ export default function AdminDashboard() {
     try {
       const response = await apiClient.approveAccount(accountId);
       if (response.success) {
-        // Refresh accounts data - we'll need to add this to useAccounts
-        window.location.reload(); // Temporary solution
+        // Find the account to get the user ID
+        const account = accounts.find(acc => acc.id === accountId);
+        const userId = account?.user?.id;
+
+        // Invalidate all possible account query variations
+        console.log('Invalidating account caches for approval, userId:', userId);
+        console.log('Account keys to invalidate:', {
+          all: accountKeys.all,
+          lists: accountKeys.lists(),
+          userSpecific: userId ? accountKeys.list(userId) : 'no userId'
+        });
+
+        queryClient.invalidateQueries({ queryKey: accountKeys.all });
+        queryClient.invalidateQueries({ queryKey: accountKeys.lists() });
+        if (userId) {
+          queryClient.invalidateQueries({ queryKey: accountKeys.list(userId) });
+        }
+
+        // Force immediate refetch
+        await queryClient.refetchQueries({ queryKey: accountKeys.all });
+        await refetchAccounts();
+        alert('Account approved successfully!');
       } else {
         alert('Failed to approve account: ' + response.error);
       }
@@ -105,8 +135,21 @@ export default function AdminDashboard() {
     try {
       const response = await apiClient.rejectAccount(accountId);
       if (response.success) {
-        // Refresh accounts data - we'll need to add this to useAccounts
-        window.location.reload(); // Temporary solution
+        // Find the account to get the user ID
+        const account = accounts.find(acc => acc.id === accountId);
+        const userId = account?.user?.id;
+
+        // Invalidate all possible account query variations
+        queryClient.invalidateQueries({ queryKey: accountKeys.all });
+        queryClient.invalidateQueries({ queryKey: accountKeys.lists() });
+        if (userId) {
+          queryClient.invalidateQueries({ queryKey: accountKeys.list(userId) });
+        }
+
+        // Force immediate refetch
+        await queryClient.refetchQueries({ queryKey: accountKeys.all });
+        await refetchAccounts();
+        alert('Account rejected successfully!');
       } else {
         alert('Failed to reject account: ' + response.error);
       }
@@ -393,7 +436,7 @@ export default function AdminDashboard() {
 
                 {transactionsError && (
                   <div className="text-center py-8">
-                    <p className="text-red-600">Error loading transactions: {transactionsError}</p>
+                    <p className="text-red-600">Error loading transactions: {transactionsError.message || 'Unknown error'}</p>
                   </div>
                 )}
 

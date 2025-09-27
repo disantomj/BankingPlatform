@@ -32,6 +32,8 @@ interface CreateBillData {
   amount: number;
   description: string;
   dueDate: string;
+  frequency?: string;
+  accountId?: number;
 }
 
 export function useBilling(userId?: number): UseBillingReturn {

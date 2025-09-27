@@ -32,6 +32,12 @@ build/
 ### VS Code ###
 .vscode/
 
+### Windows ###
+nul
+CON
+PRN
+AUX
+
 ### Security - Environment Variables and Secrets ###
 .env
 .env.local

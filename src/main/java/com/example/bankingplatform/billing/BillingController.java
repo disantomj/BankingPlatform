@@ -160,6 +160,23 @@ public class BillingController {
         }
     }
 
+    // New endpoint for realistic payment processing from account
+    @PostMapping("/{id}/pay-from-account")
+    public ResponseEntity<?> payFromAccount(
+            @PathVariable Long id,
+            @RequestBody PayFromAccountRequest request) {
+        try {
+            Billing billing = billingService.processPaymentFromAccount(
+                id,
+                request.getAccountId(),
+                request.getPaymentAmount()
+            );
+            return ResponseEntity.ok(billing);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}/discount")
     public ResponseEntity<Billing> applyDiscount(
             @PathVariable Long id,
@@ -261,6 +278,17 @@ public class BillingController {
 
         public Long getTransactionId() { return transactionId; }
         public void setTransactionId(Long transactionId) { this.transactionId = transactionId; }
+    }
+
+    public static class PayFromAccountRequest {
+        private Long accountId;
+        private BigDecimal paymentAmount;
+
+        public Long getAccountId() { return accountId; }
+        public void setAccountId(Long accountId) { this.accountId = accountId; }
+
+        public BigDecimal getPaymentAmount() { return paymentAmount; }
+        public void setPaymentAmount(BigDecimal paymentAmount) { this.paymentAmount = paymentAmount; }
     }
 
     public static class ApplyDiscountRequest {

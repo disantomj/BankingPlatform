@@ -6,6 +6,7 @@ import { useLoans, getLoanTypeDisplay, getLoanStatusColor } from '@/hooks/useLoa
 import { useAccounts } from '@/hooks/useAccounts';
 import { Button, Card, CardBody } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { apiClient } from '@/lib/api/client';
 import Link from 'next/link';
 
 
@@ -13,7 +14,7 @@ export default function LoansPage() {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
   const { loans, isLoading: isLoadingLoans, error: loansError, applyForLoan } = useLoans(user?.id);
   const { accounts } = useAccounts(user?.id);
-  const [activeTab, setActiveTab] = useState<'overview' | 'apply'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'apply' | 'credit'>('overview');
   const [viewedApprovedLoans, setViewedApprovedLoans] = useState<Set<number>>(new Set());
   const [applicationForm, setApplicationForm] = useState({
     loanType: '',
@@ -25,6 +26,12 @@ export default function LoansPage() {
     disbursementAccountId: ''
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [creditScore, setCreditScore] = useState<any>(null);
+  const [loanPreview, setLoanPreview] = useState<any>(null);
+  const [isLoadingCredit, setIsLoadingCredit] = useState(false);
+  const [paymentModal, setPaymentModal] = useState<{ isOpen: boolean, loan: any | null }>({ isOpen: false, loan: null });
+  const [paymentForm, setPaymentForm] = useState({ amount: '', description: '' });
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -74,6 +81,58 @@ export default function LoansPage() {
     window.location.href = '/';
   };
 
+  const fetchCreditScore = async () => {
+    if (!user?.id) return;
+
+    setIsLoadingCredit(true);
+    try {
+      const response = await apiClient.getCreditScore(user.id);
+      if (response.success) {
+        setCreditScore(response.data);
+      } else {
+        console.error('Failed to fetch credit score:', response.error);
+      }
+    } catch (error) {
+      console.error('Failed to fetch credit score:', error);
+    } finally {
+      setIsLoadingCredit(false);
+    }
+  };
+
+  const previewLoanDecision = async () => {
+    if (!user?.id || !applicationForm.loanType || !applicationForm.principalAmount) return;
+
+    try {
+      const response = await apiClient.previewLoanDecision({
+        userId: user.id,
+        loanAmount: parseFloat(applicationForm.principalAmount),
+        loanType: applicationForm.loanType
+      });
+
+      if (response.success) {
+        setLoanPreview(response.data);
+      } else {
+        console.error('Failed to preview loan decision:', response.error);
+      }
+    } catch (error) {
+      console.error('Failed to preview loan decision:', error);
+    }
+  };
+
+  // Fetch credit score when switching to credit tab (always fetch fresh data)
+  useEffect(() => {
+    if (activeTab === 'credit') {
+      fetchCreditScore();
+    }
+  }, [activeTab, user?.id]);
+
+  // Update loan preview when form changes
+  useEffect(() => {
+    if (applicationForm.loanType && applicationForm.principalAmount) {
+      previewLoanDecision();
+    }
+  }, [applicationForm.loanType, applicationForm.principalAmount, user?.id]);
+
 
   const handleApplicationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +172,43 @@ export default function LoansPage() {
     if (rate === 0) return principal / termMonths;
     const monthlyRate = rate / 12; // rate is already a decimal (e.g., 0.055 for 5.5%)
     return (principal * monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
+  };
+
+  // Payment handlers
+  const openPaymentModal = (loan: any) => {
+    setPaymentModal({ isOpen: true, loan });
+    setPaymentForm({ amount: loan.monthlyPayment?.toString() || '', description: 'Monthly loan payment' });
+  };
+
+  const closePaymentModal = () => {
+    setPaymentModal({ isOpen: false, loan: null });
+    setPaymentForm({ amount: '', description: '' });
+  };
+
+  const handleMakePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!paymentModal.loan || !paymentForm.amount) return;
+
+    setIsProcessingPayment(true);
+    try {
+      const response = await apiClient.makeLoanPayment(paymentModal.loan.id, {
+        paymentAmount: parseFloat(paymentForm.amount),
+        description: paymentForm.description || 'Manual loan payment'
+      });
+
+      if (response.success) {
+        setMessage({ type: 'success', text: 'Payment processed successfully!' });
+        closePaymentModal();
+        // Refresh loans data
+        window.location.reload(); // Simple refresh for now
+      } else {
+        setMessage({ type: 'error', text: response.error || 'Failed to process payment' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   // Helper function to get the display status for a loan
@@ -309,6 +405,16 @@ export default function LoansPage() {
             >
               Apply for Loan
             </button>
+            <button
+              onClick={() => setActiveTab('credit')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'credit'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
+              }`}
+            >
+              Credit Score
+            </button>
           </nav>
         </div>
 
@@ -434,8 +540,8 @@ export default function LoansPage() {
                       </div>
 
                       <div className="flex space-x-3 mt-6">
-                        {['ACTIVE', 'DISBURSED'].includes(loan.status?.toUpperCase()) && (
-                          <Button variant="primary" size="sm">Make Payment</Button>
+                        {['ACTIVE', 'APPROVED'].includes(loan.status?.toUpperCase()) && (
+                          <Button variant="primary" size="sm" onClick={() => openPaymentModal(loan)}>Make Payment</Button>
                         )}
                         <Button variant="outline" size="sm">View Details</Button>
                         {loan.status?.toUpperCase() === 'PENDING' && user?.role === 'ADMIN' && (
@@ -563,36 +669,85 @@ export default function LoansPage() {
                   </div>
                 </div>
 
-                {/* Show estimated monthly payment */}
+                {/* Show loan preview and estimated monthly payment */}
                 {applicationForm.principalAmount && applicationForm.interestRate && applicationForm.termMonths && (
-                  <div className="bg-accent-100 p-4 rounded-md">
-                    <h4 className="font-medium text-dark mb-2">Loan Summary</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-neutral-600">Principal</p>
-                        <p className="font-semibold">{formatCurrency(parseFloat(applicationForm.principalAmount))}</p>
-                      </div>
-                      <div>
-                        <p className="text-neutral-600">Interest Rate</p>
-                        <p className="font-semibold">{applicationForm.interestRate}%</p>
-                      </div>
-                      <div>
-                        <p className="text-neutral-600">Term</p>
-                        <p className="font-semibold">{applicationForm.termMonths} months</p>
-                      </div>
-                      <div>
-                        <p className="text-neutral-600">Est. Monthly Payment</p>
-                        <p className="font-semibold text-primary">
-                          {formatCurrency(
-                            calculateMonthlyPayment(
-                              parseFloat(applicationForm.principalAmount),
-                              parseFloat(applicationForm.interestRate) / 100, // Convert percentage to decimal for calculation
-                              parseInt(applicationForm.termMonths)
-                            )
-                          )}
-                        </p>
+                  <div className="space-y-4">
+                    <div className="bg-accent-100 p-4 rounded-md">
+                      <h4 className="font-medium text-dark mb-2">Loan Summary</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="text-neutral-600">Principal</p>
+                          <p className="font-semibold">{formatCurrency(parseFloat(applicationForm.principalAmount))}</p>
+                        </div>
+                        <div>
+                          <p className="text-neutral-600">Interest Rate</p>
+                          <p className="font-semibold">{applicationForm.interestRate}%</p>
+                        </div>
+                        <div>
+                          <p className="text-neutral-600">Term</p>
+                          <p className="font-semibold">{applicationForm.termMonths} months</p>
+                        </div>
+                        <div>
+                          <p className="text-neutral-600">Est. Monthly Payment</p>
+                          <p className="font-semibold text-primary">
+                            {formatCurrency(
+                              calculateMonthlyPayment(
+                                parseFloat(applicationForm.principalAmount),
+                                parseFloat(applicationForm.interestRate) / 100,
+                                parseInt(applicationForm.termMonths)
+                              )
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Loan Preview */}
+                    {loanPreview && (
+                      <div className={`p-4 rounded-md border-2 ${loanPreview.approved ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                        <div className="flex items-start space-x-3">
+                          <div className={`mt-1 ${loanPreview.approved ? 'text-green-600' : 'text-red-600'}`}>
+                            {loanPreview.approved ? (
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className={`font-medium ${loanPreview.approved ? 'text-green-900' : 'text-red-900'}`}>
+                              Loan Pre-Approval: {loanPreview.approved ? 'APPROVED' : 'NOT APPROVED'}
+                            </h4>
+                            <p className={`text-sm mt-1 ${loanPreview.approved ? 'text-green-700' : 'text-red-700'}`}>
+                              {loanPreview.reason}
+                            </p>
+                            {loanPreview.creditScore && (
+                              <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                <div>
+                                  <p className="text-neutral-600">Credit Score</p>
+                                  <p className="font-semibold">{loanPreview.creditScore.score}/850</p>
+                                </div>
+                                <div>
+                                  <p className="text-neutral-600">Risk Level</p>
+                                  <p className="font-semibold">{loanPreview.creditScore.riskLevel}</p>
+                                </div>
+                                <div>
+                                  <p className="text-neutral-600">Max Approved</p>
+                                  <p className="font-semibold">{formatCurrency(loanPreview.maxApprovedAmount)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-neutral-600">Account Balance</p>
+                                  <p className="font-semibold">{formatCurrency(loanPreview.totalBalance)}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -620,6 +775,211 @@ export default function LoansPage() {
               </form>
             </CardBody>
           </Card>
+        )}
+
+        {activeTab === 'credit' && (
+          <div className="space-y-6">
+            {isLoadingCredit ? (
+              <Card>
+                <CardBody className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-neutral-600">Loading your credit score...</p>
+                </CardBody>
+              </Card>
+            ) : creditScore ? (
+              <>
+                <Card className="border-l-4 border-l-primary">
+                  <CardBody>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-2xl font-bold text-dark">Your Credit Score</h3>
+                        <p className="text-neutral-600">Based on your banking history and financial profile</p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Button variant="outline" size="sm" onClick={fetchCreditScore} disabled={isLoadingCredit}>
+                          {isLoadingCredit ? 'Refreshing...' : 'Refresh Score'}
+                        </Button>
+                        <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{creditScore.score}</div>
+                        <div className="text-sm text-neutral-600">out of 850</div>
+                        <div className={`mt-2 px-3 py-1 rounded-full text-xs font-medium ${
+                          creditScore.riskLevel === 'LOW' ? 'bg-green-100 text-green-800' :
+                          creditScore.riskLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                          creditScore.riskLevel === 'HIGH' ? 'bg-orange-100 text-orange-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {creditScore.riskLevel} RISK
+                        </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                      <div className="text-center p-4 bg-accent-50 rounded-lg">
+                        <div className="text-2xl font-bold text-dark">{creditScore.accountHistoryScore}</div>
+                        <div className="text-sm text-neutral-600 mt-1">Account History</div>
+                        <div className="text-xs text-neutral-500 mt-1">25% weight</div>
+                      </div>
+                      <div className="text-center p-4 bg-accent-50 rounded-lg">
+                        <div className="text-2xl font-bold text-dark">{creditScore.balanceStabilityScore}</div>
+                        <div className="text-sm text-neutral-600 mt-1">Balance Stability</div>
+                        <div className="text-xs text-neutral-500 mt-1">20% weight</div>
+                      </div>
+                      <div className="text-center p-4 bg-accent-50 rounded-lg">
+                        <div className="text-2xl font-bold text-dark">{creditScore.transactionPatternScore}</div>
+                        <div className="text-sm text-neutral-600 mt-1">Transaction Patterns</div>
+                        <div className="text-xs text-neutral-500 mt-1">20% weight</div>
+                      </div>
+                      <div className="text-center p-4 bg-accent-50 rounded-lg">
+                        <div className="text-2xl font-bold text-dark">{creditScore.existingDebtScore}</div>
+                        <div className="text-sm text-neutral-600 mt-1">Existing Debt</div>
+                        <div className="text-xs text-neutral-500 mt-1">25% weight</div>
+                      </div>
+                      <div className="text-center p-4 bg-accent-50 rounded-lg">
+                        <div className="text-2xl font-bold text-dark">{creditScore.incomeStabilityScore}</div>
+                        <div className="text-sm text-neutral-600 mt-1">Income Stability</div>
+                        <div className="text-xs text-neutral-500 mt-1">10% weight</div>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+
+                <Card>
+                  <CardBody>
+                    <h4 className="text-lg font-semibold text-dark mb-4">How to Improve Your Credit Score</h4>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                        <div>
+                          <p className="font-medium">Maintain Higher Account Balances</p>
+                          <p className="text-neutral-600">Keep consistent positive balances across your accounts</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                        <div>
+                          <p className="font-medium">Increase Transaction Activity</p>
+                          <p className="text-neutral-600">Regular account usage shows financial engagement</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                        <div>
+                          <p className="font-medium">Pay Down Existing Debt</p>
+                          <p className="text-neutral-600">Lower debt-to-income ratio improves creditworthiness</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                        <div>
+                          <p className="font-medium">Establish Regular Income</p>
+                          <p className="text-neutral-600">Consistent deposits demonstrate stable income</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              </>
+            ) : (
+              <Card>
+                <CardBody className="text-center py-12">
+                  <div className="text-neutral-400 mb-4">
+                    <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-dark mb-2">Unable to load credit score</h3>
+                  <p className="text-neutral-600 mb-4">There was an issue loading your credit score</p>
+                  <Button variant="primary" onClick={fetchCreditScore}>
+                    Try Again
+                  </Button>
+                </CardBody>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Payment Modal */}
+        {paymentModal.isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-dark">Make Loan Payment</h3>
+                <button
+                  onClick={closePaymentModal}
+                  className="text-neutral-400 hover:text-neutral-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-4 p-4 bg-neutral-50 rounded-md">
+                <h4 className="font-medium text-dark">Loan Details</h4>
+                <p className="text-sm text-neutral-600 mt-1">
+                  {paymentModal.loan?.loanType} - Ref: {paymentModal.loan?.loanReference}
+                </p>
+                <p className="text-sm text-neutral-600">
+                  Current Balance: {formatCurrency(paymentModal.loan?.currentBalance || 0)}
+                </p>
+                <p className="text-sm text-neutral-600">
+                  Monthly Payment: {formatCurrency(paymentModal.loan?.monthlyPayment || 0)}
+                </p>
+              </div>
+
+              <form onSubmit={handleMakePayment} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-2">Payment Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={paymentForm.amount}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="Enter payment amount"
+                    required
+                    disabled={isProcessingPayment}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-2">Description (Optional)</label>
+                  <input
+                    type="text"
+                    value={paymentForm.description}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="Payment description"
+                    disabled={isProcessingPayment}
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={closePaymentModal}
+                    disabled={isProcessingPayment}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    disabled={isProcessingPayment || !paymentForm.amount}
+                    className="flex-1"
+                  >
+                    {isProcessingPayment ? 'Processing...' : 'Make Payment'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </main>
     </div>
