@@ -72,3 +72,5 @@ banking-frontend/.next/
 banking-frontend/node_modules/
 banking-frontend/out/
 banking-frontend/build/
+
+.CLAUDE.md
